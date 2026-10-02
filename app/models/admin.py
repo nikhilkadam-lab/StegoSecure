@@ -3,10 +3,15 @@ from datetime import datetime, timezone
 from app.extensions import db
 
 
-class User(db.Model):
-    __tablename__ = "users"
+class Admin(db.Model):
+    __tablename__ = "admins"
 
     id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(
+        db.String(100),
+        nullable=False,
+    )
 
     email = db.Column(
         db.String(255),
@@ -18,6 +23,12 @@ class User(db.Model):
     password_hash = db.Column(
         db.String(255),
         nullable=False,
+    )
+
+    is_active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
     )
 
     created_at = db.Column(
@@ -34,4 +45,4 @@ class User(db.Model):
     )
 
     def __repr__(self):
-        return f"<User {self.email}>"
+        return f"<Admin {self.email}>"
