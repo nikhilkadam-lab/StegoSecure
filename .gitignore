@@ -6,3 +6,6 @@ __pycache__/
 instance/
 uploads/*
 !uploads/.gitkeep
+__pycache__/
+*.py[cod]
+.pytest_cache/
