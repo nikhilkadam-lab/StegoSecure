@@ -6,31 +6,79 @@ from flask import (
     url_for,
     session,
     flash,
+    current_app
 )
 from services.auth_service import register_user, authenticate_user
+from email_validator import validate_email, EmailNotValidError
 
 auth_bp = Blueprint("auth", __name__)
 
 
+
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == "POST":
-        username = request.form.get("username", "")
-        email = request.form.get("email", "")
-        password = request.form.get("password", "")
+    if request.method == "GET":
+        return render_template(
+            "register.html",
+            form_data={"username": "", "email": ""}
+        )
+    username = request.form.get("username", "").strip()
+    email = request.form.get("email", "").strip()
+    password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
 
+    # Preserve only non-sensitive values after a failed submission.
+    form_data = {
+        "username": username,
+        "email": email,
+    }
+
+    try:
+        if not confirm_password:
+            raise ValueError("Please confirm your password.")
+        if password != confirm_password:
+            raise ValueError("Passwords do not match.")
+
+        # Validate email syntax and DNS/MX configuration on the server.
+        # This does not prove mailbox existence or SES sending eligibility.
         try:
-            register_user(username, email, password)
-            flash("Registration successful! Please log in.", "success")
-            return redirect(url_for("auth.login"))
+            email = validate_email(email, check_deliverability=True).normalized
+            domain = email.rsplit("@", 1)[1].lower()
 
-        except ValueError as exc:
-            flash(str(exc), "error")
+            common_typos = {
+                "gmil.com": "gmail.com",
+                "gmai.com": "gmail.com",
+                "gmail.con": "gmail.com",
+                "yaho.com": "yahoo.com",
+                "yahoo.con": "yahoo.com",
+                "hotmal.com": "hotmail.com",
+                "outlok.com": "outlook.com",
+                "iclould.com": "icloud.com",
+            }
 
-        except Exception:
-            flash("Registration failed. Please try again.", "error")
+            if domain in common_typos:
+                raise ValueError(
+                    f"Please check your email domain. Did you mean {common_typos[domain]}?"
+                )
+        except EmailNotValidError as exc:
+            raise ValueError(
+                "Please enter a valid email address with a domain configured to receive email."
+            ) from exc
 
-    return render_template("register.html")
+        form_data["email"] = email
+        register_user(username, email, password)
+        flash("Registration successful! Please log in.", "success")
+        return redirect(url_for("auth.login"))
+
+    except ValueError as exc:
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception("Registration failed")
+        flash("Registration failed. Please try again.", "error")
+
+    return render_template("register.html", form_data=form_data), 400
+
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])

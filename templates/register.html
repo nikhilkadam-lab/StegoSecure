@@ -250,6 +250,12 @@
                 padding: 2rem 1.4rem;
             }
         }
+
+        .btn-primary:disabled {
+            background: #a5b4fc;
+            cursor: not-allowed;
+            opacity: 0.75;
+        }
     </style>
 </head>
 
@@ -280,8 +286,9 @@
                 </p>
             </header>
 
-            <form method="post"
-                  action="{{ url_for('auth.register') }}">
+            <form id="registerForm"
+                method="post"
+                action="{{ url_for('auth.register') }}">
 
                 <input type="hidden"
                        name="csrf_token"
@@ -293,11 +300,13 @@
                         type="text"
                         id="username"
                         name="username"
+                        value="{{ form_data.username|default('', true) }}"
                         placeholder="Enter your full name"
                         minlength="2"
                         maxlength="50"
                         autocomplete="name"
                         required>
+                        <small id="name-message" class="hint" aria-live="polite"></small>
                 </div>
 
                 <div class="form-group">
@@ -306,10 +315,12 @@
                         type="email"
                         id="email"
                         name="email"
+                        value="{{ form_data.email|default('', true) }}"
                         placeholder="Enter your email address"
                         maxlength="254"
                         autocomplete="email"
                         required>
+                        <small id="email-message" class="hint" aria-live="polite"></small>
                 </div>
 
                 <section class="otp-section"
@@ -356,9 +367,30 @@
                         Minimum 8 characters, with at least one uppercase
                         letter, one number, and one special character.
                     </small>
+                    <div id="password-rules" class="hint" aria-live="polite">
+                        <div id="rule-length">✗ At least 8 characters</div>
+                        <div id="rule-uppercase">✗ At least one uppercase letter</div>
+                        <div id="rule-number">✗ At least one number</div>
+                        <div id="rule-special">✗ At least one special character</div>
+                    </div>
+                    <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        placeholder="Re-enter your password"
+                        minlength="8"
+                        maxlength="128"
+                        autocomplete="new-password"
+                        required
+                    >
+                    <small id="password-match-message" class="hint" aria-live="polite"></small>
+                </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">
+                <button id="create-account-btn" type="submit"
+                        class="btn btn-primary" disabled>
                     Create Account
                 </button>
             </form>
@@ -379,5 +411,213 @@
             </div>
         </section>
     </main>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("registerForm");
+    const name = document.getElementById("username");
+    const nameMessage = document.getElementById("name-message");
+    const email = document.getElementById("email");
+    const emailMessage = document.getElementById("email-message");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirm_password");
+    const matchMessage = document.getElementById("password-match-message");
+    const createButton = document.getElementById("create-account-btn");
+
+    const emailTypos = {
+        "gmil.com": "gmail.com",
+        "gmai.com": "gmail.com",
+        "gmail.con": "gmail.com",
+        "yaho.com": "yahoo.com",
+        "yahoo.con": "yahoo.com",
+        "hotmal.com": "hotmail.com",
+        "outlok.com": "outlook.com",
+        "iclould.com": "icloud.com"
+    };
+
+    const rules = [
+        {
+            id: "rule-length",
+            test: value => value.length >= 8,
+            label: "At least 8 characters"
+        },
+        {
+            id: "rule-uppercase",
+            test: value => /[A-Z]/.test(value),
+            label: "At least one uppercase letter"
+        },
+        {
+            id: "rule-number",
+            test: value => /[0-9]/.test(value),
+            label: "At least one number"
+        },
+        {
+            id: "rule-special",
+            test: value => /[^A-Za-z0-9]/.test(value),
+            label: "At least one special character"
+        }
+    ];
+
+    function validateName(showMessage = false) {
+        const value = name.value.trim();
+        const valid = value.length >= 2 &&
+                      value.length <= 50 &&
+                      /^[A-Za-z][A-Za-z .'-]*$/.test(value);
+
+        name.setCustomValidity(
+            valid ? "" : "Enter a valid full name using letters and spaces."
+        );
+
+        if (valid) {
+            nameMessage.textContent = "";
+        } else if (showMessage || value) {
+            nameMessage.textContent = value
+                ? "Use 2–50 characters: letters, spaces, apostrophes, dots or hyphens."
+                : "Please enter your full name.";
+        } else {
+            nameMessage.textContent = "";
+        }
+
+        nameMessage.style.color = "#991b1b";
+        return valid;
+    }
+
+    function validateEmail(showMessage = false) {
+        const value = email.value.trim();
+        const formatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        const domain = value.includes("@")
+            ? value.split("@").pop().toLowerCase()
+            : "";
+        const suggestion = emailTypos[domain];
+
+        let error = "";
+
+        if (!value) {
+            error = "Please enter your email address.";
+        } else if (!formatValid) {
+            error = "Please enter a valid email address.";
+        } else if (suggestion) {
+            error = `Check the domain. Did you mean ${suggestion}?`;
+        }
+
+        email.setCustomValidity(error);
+
+        if (error) {
+            emailMessage.textContent = error;
+            emailMessage.style.color = "#991b1b";
+        } else {
+            emailMessage.textContent =
+                "Email format looks valid. Mailbox access still needs verification.";
+            emailMessage.style.color = "green";
+        }
+
+        return !error;
+    }
+
+    function validatePassword() {
+        const value = password.value;
+        let allRulesPass = true;
+
+        rules.forEach(rule => {
+            const passed = rule.test(value);
+            const element = document.getElementById(rule.id);
+
+            element.textContent = `${passed ? "✓" : "✗"} ${rule.label}`;
+            element.style.color = passed ? "green" : "#991b1b";
+
+            if (!passed) allRulesPass = false;
+        });
+
+        password.setCustomValidity(
+            allRulesPass ? "" :
+            "Password must meet all four requirements."
+        );
+
+        return allRulesPass;
+    }
+
+    function validateMatch(showMessage = false) {
+        const value = confirmPassword.value;
+        const matches = value !== "" && value === password.value;
+
+        confirmPassword.setCustomValidity(
+            matches ? "" : "Passwords must match."
+        );
+
+        if (matches) {
+            matchMessage.textContent = "Passwords match.";
+            matchMessage.style.color = "green";
+        } else if (value || showMessage) {
+            matchMessage.textContent = value
+                ? "Passwords do not match."
+                : "Please confirm your password.";
+            matchMessage.style.color = "#991b1b";
+        } else {
+            matchMessage.textContent = "";
+        }
+
+        return matches;
+    }
+
+    function updateButton() {
+        const nameValid = validateName();
+        const emailValid = validateEmail();
+        const passwordValid = validatePassword();
+        const confirmValid = validateMatch();
+
+        createButton.disabled = !(
+            nameValid &&
+            emailValid &&
+            passwordValid &&
+            confirmValid
+        );
+    }
+
+    name.addEventListener("input", () => {
+        validateName(true);
+        updateButton();
+    });
+
+    name.addEventListener("blur", () => {
+        validateName(true);
+        updateButton();
+    });
+
+    email.addEventListener("input", updateButton);
+    email.addEventListener("blur", updateButton);
+
+    password.addEventListener("input", () => {
+        validatePassword();
+        validateMatch();
+        updateButton();
+    });
+
+    confirmPassword.addEventListener("input", () => {
+        validateMatch(true);
+        updateButton();
+    });
+
+    confirmPassword.addEventListener("blur", () => {
+        validateMatch(true);
+        updateButton();
+    });
+
+    form.addEventListener("submit", event => {
+        validateName(true);
+        validateEmail(true);
+        validatePassword();
+        validateMatch(true);
+        updateButton();
+
+        if (createButton.disabled || !form.checkValidity()) {
+            event.preventDefault();
+            form.reportValidity();
+        }
+    });
+
+    updateButton();
+});
+</script>
 </body>
 </html>
