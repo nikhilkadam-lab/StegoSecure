@@ -502,7 +502,7 @@ textarea.form-control {
 
                 <div class="capacity-box">
 
-                    <small>Estimated Image Capacity</small>
+                    <small>Maximum Encryptable File Size</small>
 
                     <strong id="capacityMB">0.00 MB</strong>
 
@@ -768,6 +768,15 @@ textarea.form-control {
                 >
                     🔒 Encrypt Data
                 </button>
+                {% with encryption_errors = get_flashed_messages(category_filter=["encryption_error"]) %}
+                    {% for message in encryption_errors %}
+                        <div class="status-message status-error"
+                            role="alert"
+                            style="margin-top: 12px; text-align: center;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endwith %}
 
                 <div
                     id="formStatus"
@@ -797,6 +806,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const loginUrl =
         {{ url_for('auth.login', next=url_for('home', _anchor='encryption')) | tojson }};
+    const capacityUrl =
+    {{ url_for('encrypt_capacity') | tojson }};
 
 
     // ELEMENT REFERENCES
@@ -846,6 +857,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // STATE
 
     let rawCapacityBytes = 0;
+    let maxFileBytes = 0;
+    let capacityReady = false;
+    let capacityRequestId = 0;
+    let coverWidth = 0;
+    let coverHeight = 0;
+
     let imageReady = false;
 
     let coverPreviewUrl = null;
@@ -918,6 +935,149 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
+    // SERVER-SIDE USABLE FILE CAPACITY ESTIMATION
+
+    async function refreshFileCapacity() {
+
+        const requestId = ++capacityRequestId;
+
+        capacityReady = false;
+        maxFileBytes = 0;
+
+        if (!imageReady || !coverWidth || !coverHeight) {
+            capacityMB.textContent = "0.00 MB";
+            capacityDetails.textContent = "Select a cover image first";
+            validateForm();
+            return;
+        }
+
+        capacityMB.textContent = "Calculating...";
+        capacityDetails.textContent = "Calculating usable file capacity...";
+
+        validateForm();
+
+        const authType = getAuthenticationType();
+
+        const question = authType === "QA"
+            ? (
+                securityQuestion.value === "custom"
+                    ? customQuestion.value.trim()
+                    : securityQuestion.value
+            )
+            : "";
+
+        const selectedFile = secretFile.files[0];
+
+        const filename = selectedFile
+            ? selectedFile.name
+            : "encrypted_file";
+
+        const params = new URLSearchParams({
+            width: String(coverWidth),
+            height: String(coverHeight),
+            authentication_type: authType,
+            filename: filename,
+            question: question
+        });
+
+        try {
+
+            const response = await fetch(
+                capacityUrl + "?" + params.toString(),
+                {
+                    method: "GET",
+                    credentials: "same-origin"
+                }
+            );
+
+            const result = await response.json();
+
+            // Ignore older requests if the user changed settings.
+            if (requestId !== capacityRequestId) {
+                return;
+            }
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.error || "Unable to calculate file capacity."
+                );
+            }
+
+            maxFileBytes = result.max_file_bytes;
+            capacityReady = true;
+
+            capacityMB.textContent =
+                (maxFileBytes / (1024 * 1024)).toFixed(2) + " MB";
+
+            capacityDetails.textContent =
+                coverWidth + " × " + coverHeight +
+                " pixels · Maximum original file size";
+
+            validateForm();
+
+            // Revalidate an already selected file.
+            if (secretFile.files.length > 0) {
+                checkSelectedSecretFile();
+            }
+
+        } catch (error) {
+
+            if (requestId !== capacityRequestId) {
+                return;
+            }
+
+            capacityReady = false;
+            maxFileBytes = 0;
+
+            capacityMB.textContent = "Unavailable";
+            capacityDetails.textContent =
+                "Unable to calculate capacity. Please try again.";
+
+            setStatus(
+                coverStatus,
+                error.message,
+                true
+            );
+
+            validateForm();
+
+        }
+
+    }
+
+    function checkSelectedSecretFile() {
+
+    const file = secretFile.files[0];
+
+    if (!file || !capacityReady) {
+        validateForm();
+        return false;
+    }
+
+    if (file.size > maxFileBytes) {
+
+        secretFile.value = "";
+
+        secretFileName.textContent = "No file selected";
+
+        releaseSecretPreview();
+
+        setStatus(
+            fileStatus,
+            "File exceeds the maximum encryptable file size of " +
+            (maxFileBytes / (1024 * 1024)).toFixed(2) +
+            " MB. Please select a smaller file.",
+            true
+        );
+
+        validateForm();
+
+        return false;
+    }
+
+    return true;
+
+}
 
     // AUTHENTICATION
 
@@ -1020,11 +1180,11 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
 
             valid = valid &&
+                capacityReady &&
                 secretFile.files.length > 0 &&
-                secretFile.files[0].size <= rawCapacityBytes;
+                secretFile.files[0].size <= maxFileBytes;
 
         }
-
 
         if (getAuthenticationType() === "QA") {
 
@@ -1131,15 +1291,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const width = image.naturalWidth;
             const height = image.naturalHeight;
 
-            rawCapacityBytes = Math.floor(
-                (width * height * 3) / 8
+            coverWidth = width;
+            coverHeight = height;
+
+            rawCapacityBytes = Math.max(
+                0,
+                Math.floor((width * height * 3) / 8) - 4
             );
-
-            capacityMB.textContent =
-                (rawCapacityBytes / (1024 * 1024)).toFixed(2) + " MB";
-
-            capacityDetails.textContent =
-                width + " × " + height + " pixels";
 
 
             // DISPLAY ORIGINAL IMAGE ASPECT RATIO
@@ -1154,6 +1312,8 @@ document.addEventListener("DOMContentLoaded", function () {
             imageReady = true;
 
             updateControls();
+
+            refreshFileCapacity();
 
             setStatus(
                 coverStatus,
@@ -1180,6 +1340,11 @@ document.addEventListener("DOMContentLoaded", function () {
             imageReady = false;
 
             rawCapacityBytes = 0;
+            capacityReady = false;
+            maxFileBytes = 0;
+            coverWidth = 0;
+            coverHeight = 0;
+            capacityRequestId++;
 
             updateControls();
 
@@ -1235,17 +1400,13 @@ document.addEventListener("DOMContentLoaded", function () {
         secretFileName.textContent = file.name;
 
 
-        // CHECK AVAILABLE RAW CAPACITY
+        // CHECK ACTUAL ESTIMATED ENCRYPTABLE FILE CAPACITY
 
-        if (file.size > rawCapacityBytes) {
-
-            secretFile.value = "";
-
-            secretFileName.textContent = "No file selected";
+        if (!capacityReady) {
 
             setStatus(
                 fileStatus,
-                "File exceeds the available image capacity. Please select a smaller file.",
+                "Please wait while image capacity is calculated.",
                 true
             );
 
@@ -1253,6 +1414,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             return;
 
+        }
+
+        if (!checkSelectedSecretFile()) {
+            return;
         }
 
 
@@ -1316,6 +1481,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             updateAuthentication();
 
+            refreshFileCapacity();
+
             validateForm();
 
         });
@@ -1338,6 +1505,7 @@ document.addEventListener("DOMContentLoaded", function () {
             customQuestion.value = "";
 
         }
+        refreshFileCapacity();
 
         validateForm();
 
@@ -1346,7 +1514,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     securityAnswer.addEventListener("input", validateForm);
 
-    customQuestion.addEventListener("input", validateForm);
+    customQuestion.addEventListener("input", function () {
+    refreshFileCapacity();
+    validateForm();
+});
 
     secretKey.addEventListener("input", validateForm);
 

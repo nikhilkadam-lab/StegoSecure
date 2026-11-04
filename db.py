@@ -1,8 +1,13 @@
 import os
+
 import mysql.connector
+
+from config import BASE_DIR
 from dotenv import load_dotenv
 
-load_dotenv("/home/ubuntu/stegosecure/.env")
+
+# Use the same project-level .env file as Flask.
+load_dotenv(BASE_DIR / ".env")
 
 
 def get_db_connection():

@@ -299,7 +299,7 @@
 
             <a href="{{ url_for('home') }}">Home</a>
             <a href="{{ url_for('home') }}#encryption">Encryption</a>
-            <a href="{{ url_for('home') }}#decryption">Decryption</a>
+            <a href="{{ url_for('decryption_page') }}">Decryption</a>
 
             {% if session.get('user_id') %}
 
@@ -323,7 +323,7 @@
                             Encrypt Data
                         </a>
 
-                        <a href="{{ url_for('home') }}#decryption">
+                        <a href="{{ url_for('decryption_page') }}">
                             Decrypt Data
                         </a>
 
@@ -373,6 +373,16 @@
     </nav>
 
     <main class="page-content">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                {% if category != "encryption_error" %}
+                    <div style="margin: 15px auto; max-width: 1100px; padding: 12px 18px; border-radius: 6px; background: #eaf7f7; color: #203647;">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endwith %}
         {% block content %}{% endblock %}
     </main>
 
@@ -395,7 +405,7 @@
 
                 <a href="{{ url_for('home') }}">Home</a>
                 <a href="{{ url_for('home') }}#encryption">Encryption</a>
-                <a href="{{ url_for('home') }}#decryption">Decryption</a>
+                <a href="{{ url_for('decryption_page') }}">Decryption</a>
             </div>
 
             <div>
