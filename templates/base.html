@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}StegoSecure{% endblock %}</title>
+
+    <style>
+        :root {
+            --navy: #071a2b;
+            --navy-light: #102b40;
+            --teal: #00c9a7;
+            --cyan: #35d5e8;
+            --primary: #087f8c;
+            --text: #203647;
+            --muted: #64748b;
+            --background: #f3f8fa;
+            --white: #ffffff;
+            --border: #d8e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: var(--text);
+            background: var(--background);
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* NAVIGATION */
+
+        .navbar {
+            min-height: 64px;
+            padding: 0 4%;
+            background: var(--navy);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            z-index: 20;
+            box-shadow: 0 3px 15px #071a2b20;
+        }
+
+        .brand {
+            color: white;
+            font-size: 23px;
+            font-weight: 750;
+            letter-spacing: .3px;
+        }
+
+        .brand span {
+            color: var(--teal);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 27px;
+        }
+
+        .nav-links > a {
+            color: #dce9f1;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color .2s;
+        }
+
+        .nav-links > a:hover {
+            color: var(--teal);
+        }
+
+        .nav-auth {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-auth .login-link {
+            color: white;
+        }
+
+        .nav-auth .register-link {
+            background: var(--teal);
+            color: var(--navy);
+            padding: 9px 17px;
+            border-radius: 7px;
+            font-weight: 650;
+        }
+
+        /* PROFILE */
+
+        .profile-menu {
+            position: relative;
+        }
+
+        .profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: white;
+            background: var(--navy-light);
+            border: 1px solid #315267;
+            padding: 7px 12px;
+            border-radius: 25px;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .profile-icon {
+            width: 31px;
+            height: 31px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--teal);
+            color: var(--navy);
+            font-weight: bold;
+        }
+
+        .profile-name {
+            font-size: 13px;
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: 210px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px #00000020;
+            padding: 8px;
+        }
+
+        .profile-menu[open] .profile-dropdown {
+            display: block;
+        }
+
+        .profile-dropdown a,
+        .profile-dropdown button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 11px 12px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .profile-dropdown a:hover,
+        .profile-dropdown button:hover {
+            background: #eaf7f7;
+            color: var(--primary);
+        }
+
+        .profile-dropdown form {
+            margin: 0;
+        }
+
+        /* MAIN CONTENT */
+
+        .page-content {
+            flex: 1;
+            width: 100%;
+        }
+
+        /* FOOTER */
+
+        .site-footer {
+            background: var(--navy);
+            color: #c5d5df;
+            padding: 35px 5% 18px;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 35px;
+            max-width: 1250px;
+            margin: auto;
+        }
+
+        .footer-content h3,
+        .footer-content h4 {
+            color: white;
+            margin-top: 0;
+        }
+
+        .footer-content h3 span {
+            color: var(--teal);
+        }
+
+        .footer-content p {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #a9bdca;
+            max-width: 400px;
+        }
+
+        .footer-content a {
+            display: block;
+            margin: 10px 0;
+            color: #b8cbd5;
+            font-size: 13px;
+        }
+
+        .footer-content a:hover {
+            color: var(--teal);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #294153;
+            margin-top: 25px;
+            padding-top: 17px;
+            text-align: center;
+            font-size: 12px;
+            color: #8fa7b6;
+        }
+
+        @media(max-width: 700px) {
+            .navbar {
+                padding: 12px 4%;
+                flex-wrap: wrap;
+            }
+
+            .nav-links {
+                gap: 13px;
+                flex-wrap: wrap;
+            }
+
+            .nav-links > a {
+                font-size: 12px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .footer-about {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media(max-width: 420px) {
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-about {
+                grid-column: auto;
+            }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+
+        <a href="{{ url_for('home') }}" class="brand">
+            Stego<span>Secure</span>
+        </a>
+
+        <div class="nav-links">
+
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('home') }}#encryption">Encryption</a>
+            <a href="{{ url_for('home') }}#decryption">Decryption</a>
+
+            {% if session.get('user_id') %}
+
+                <details class="profile-menu">
+
+                    <summary class="profile-trigger">
+                        <span class="profile-icon">👤</span>
+                        <span class="profile-name">
+                            {{ session.get('username', 'My Account') }}
+                        </span>
+                        <span>⌄</span>
+                    </summary>
+
+                    <div class="profile-dropdown">
+
+                        <a href="{{ url_for('auth.dashboard') }}">
+                            My Dashboard
+                        </a>
+
+                        <a href="{{ url_for('home') }}#encryption">
+                            Encrypt Data
+                        </a>
+
+                        <a href="{{ url_for('home') }}#decryption">
+                            Decrypt Data
+                        </a>
+
+                        <form method="post"
+                              action="{{ url_for('auth.logout') }}">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token() }}">
+
+                            <button type="submit">
+                                Logout
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </details>
+
+            {% else %}
+
+                <div class="nav-auth">
+
+                    <a class="login-link"
+                       href="{{ url_for('auth.login') }}">
+                        Login
+                    </a>
+
+                    <a class="register-link"
+                       href="{{ url_for('auth.register') }}">
+                        Register
+                    </a>
+
+                </div>
+
+                <a href="{{ url_for('auth.login') }}"
+                   aria-label="Login to your account"
+                   title="Login">
+                    👤
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </nav>
+
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+
+        <div class="footer-content">
+
+            <div class="footer-about">
+                <h3>Stego<span>Secure</span></h3>
+
+                <p>
+                    StegoSecure combines encryption and image
+                    steganography to help protect confidential
+                    information through secure data hiding.
+                </p>
+            </div>
+
+            <div>
+                <h4>Quick Links</h4>
+
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('home') }}#encryption">Encryption</a>
+                <a href="{{ url_for('home') }}#decryption">Decryption</a>
+            </div>
+
+            <div>
+                <h4>Account</h4>
+
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('auth.dashboard') }}">Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}">Login</a>
+                    <a href="{{ url_for('auth.register') }}">Register</a>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            © StegoSecure. All rights reserved.
+        </div>
+
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -95,3 +95,10 @@ CREATE TABLE payments (
 
 INSERT INTO system_settings (setting_key, setting_value)
 VALUES ('default_encryption_limit', 5);
+
+CREATE TABLE IF NOT EXISTS site_settings (
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value VARCHAR(500) NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;

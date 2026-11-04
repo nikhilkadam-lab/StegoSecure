@@ -83,6 +83,8 @@ def register():
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    next_url = request.form.get("next") or request.args.get("next", "")
+
     if request.method == "POST":
         email = request.form.get("email", "")
         password = request.form.get("password", "")
@@ -95,23 +97,31 @@ def login():
             session["username"] = user["username"]
             session["email"] = user["email"]
 
+            # Only allow local relative destinations.
+            if (
+                next_url.startswith("/")
+                and not next_url.startswith("//")
+                and "\\" not in next_url
+            ):
+                return redirect(next_url)
+
             return redirect(url_for("auth.dashboard"))
 
         except ValueError:
             flash("Invalid email or password.", "error")
 
         except Exception:
+            current_app.logger.exception("Login failed")
             flash("Login failed. Please try again.", "error")
 
-    return render_template("login.html")
+    return render_template("login.html", next_url=next_url)
 
-
-@auth_bp.route("/dashboard")
+@auth_bp.route("/home")
 def dashboard():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
-    return render_template("dashboard.html")
+    return render_template("home.html")
 
 
 @auth_bp.route("/logout", methods=["POST"])

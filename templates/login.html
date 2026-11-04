@@ -61,6 +61,7 @@
             </header>
 
             <form method="post" action="{{ url_for('auth.login') }}">
+                <input type="hidden" name="next" value="{{ next_url }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="form-group">

@@ -1,0 +1,1469 @@
+
+{% extends "base.html" %}
+
+{% block title %}StegoSecure | Encryption{% endblock %}
+
+{% block extra_css %}
+
+.banner {
+    width: 100%;
+    background: #071a2b;
+    overflow: hidden;
+}
+
+.banner img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.encryption-section {
+    max-width: 1350px;
+    margin: 26px auto 45px;
+    padding: 0 25px;
+}
+
+.encryption-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px 38px;
+}
+
+/* CARDS */
+
+.encryption-card {
+    min-width: 0;
+    min-height: 210px;
+    padding: 15px;
+    border: 1px solid #c9dfe5;
+    border-radius: 12px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    box-shadow: 0 4px 15px #092a3b08;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+
+.encryption-card:hover {
+    border-color: #00bfa5;
+    box-shadow: 0 9px 25px #092a3b12;
+}
+
+.encryption-card h3 {
+    min-height: 27px;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #087f8c;
+    font-size: 17px;
+    line-height: 1.3;
+    text-align: center;
+}
+
+/* FORM CONTROLS */
+
+.field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #344b5b;
+    margin: 8px 0 6px;
+}
+
+.form-control {
+    width: 100%;
+    min-width: 0;
+    padding: 10px 11px;
+    border: 1px solid #cbd9e2;
+    border-radius: 7px;
+    background: #fff;
+    color: #203647;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #00a994;
+    box-shadow: 0 0 0 3px #00bfa51c;
+}
+
+textarea.form-control {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/* UPLOAD AREA */
+
+.upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    min-width: 0;
+    min-height: 90px;
+    padding: 12px;
+    text-align: center;
+    border: 2px dashed #a9cbd1;
+    border-radius: 9px;
+    background: #f5fbfc;
+    cursor: pointer;
+    color: #087f8c;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    transition: .2s;
+}
+
+.upload-area:hover {
+    border-color: #00bfa5;
+    background: #edfaf8;
+}
+
+.upload-area input {
+    display: none;
+}
+
+.upload-area .help-text {
+    margin: 0;
+}
+
+/* COVER IMAGE PREVIEW */
+
+.cover-upload-area {
+    min-height: 125px;
+    padding: 8px;
+}
+
+.cover-preview {
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    max-height: 175px;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 6px;
+}
+
+.cover-upload-area.has-preview {
+    border-style: solid;
+    border-color: #b7dce0;
+    background: #f7fbfc;
+}
+
+.cover-upload-area.has-preview .cover-upload-prompt {
+    display: none;
+}
+
+.cover-upload-area.has-preview .cover-preview {
+    display: block;
+}
+
+/* FILE INPUT SECTION */
+
+.file-input-layout {
+    width: 100%;
+    min-width: 0;
+}
+
+.file-input-layout:not(.hidden-field) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.file-input-layout .upload-area {
+    width: 100%;
+    min-height: 100px;
+    margin: 0;
+    padding: 12px;
+}
+
+/* SELECTED FILE PREVIEW */
+
+.file-preview {
+    display: none;
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #d5e7e9;
+    border-radius: 8px;
+    background: #f6fbfb;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    text-align: center;
+}
+
+.file-preview.visible {
+    display: flex;
+}
+
+.secret-image-preview {
+    display: none;
+    max-width: 100%;
+    max-height: 135px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 5px;
+}
+
+.file-preview-icon {
+    font-size: 36px;
+    line-height: 1.2;
+}
+
+.file-preview-name {
+    width: 100%;
+    color: #087f8c;
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.file-preview-size {
+    color: #718096;
+    font-size: 11px;
+}
+
+.file-name {
+    margin-top: 7px;
+    color: #526b7a;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.file-input-layout .file-name {
+    margin: 0;
+    padding: 2px 5px;
+    text-align: center;
+}
+
+.file-input-layout .status-message {
+    width: 100%;
+    margin: 0;
+    padding: 0 4px;
+    overflow-wrap: anywhere;
+}
+
+/* CAPACITY */
+
+.capacity-box {
+    margin-top: 10px;
+    padding: 12px 10px;
+    border-radius: 8px;
+    background: #edf8f7;
+    text-align: center;
+}
+
+.capacity-box strong {
+    display: block;
+    color: #087f8c;
+    font-size: 25px;
+}
+
+.capacity-box small {
+    color: #64748b;
+    font-size: 11px;
+}
+
+/* HELP TEXT */
+
+.help-text {
+    color: #718096;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-top: 7px;
+}
+
+/* AUTHENTICATION */
+
+.radio-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: center;
+    margin: 4px 0 10px;
+    font-size: 13px;
+}
+
+.radio-options label {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    cursor: pointer;
+}
+
+.hidden-field {
+    display: none !important;
+}
+
+/* KEY GENERATOR */
+
+.generate-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.generate-row input {
+    flex: 1;
+}
+
+.secondary-button {
+    border: 0;
+    padding: 10px 12px;
+    border-radius: 7px;
+    color: white;
+    background: #087f8c;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.secondary-button:hover {
+    background: #066b76;
+}
+
+/* ENCRYPT BUTTON */
+
+.primary-button {
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    border-radius: 8px;
+    color: #06202a;
+    background: linear-gradient(135deg, #00d2ad, #36d5e8);
+    font-size: 16px;
+    font-weight: 750;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.primary-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px #00bfa538;
+}
+
+.primary-button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+/* STATUS */
+
+.status-message {
+    font-size: 12px;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+.status-error {
+    color: #c0392b;
+}
+
+.status-success {
+    color: #16835d;
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 850px) {
+    .encryption-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+}
+
+@media(max-width: 520px) {
+    .encryption-section {
+        padding: 0 15px;
+    }
+
+    .encryption-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .encryption-card {
+        min-height: 160px;
+        padding: 15px;
+    }
+
+    .generate-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cover-preview {
+        max-height: 200px;
+    }
+}
+
+{% endblock %}
+
+
+{% block content %}
+
+<section class="banner">
+    <img
+        src="{{ banner_url }}"
+        alt="StegoSecure - Hide, Encrypt and Protect"
+    >
+</section>
+
+<section class="encryption-section" id="encryption">
+
+    <form id="encryptionForm"
+          action="/encrypt"
+          method="POST"
+          enctype="multipart/form-data">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token() }}">
+
+        <div class="encryption-grid">
+
+            <!-- 1. COVER IMAGE -->
+
+            <div class="encryption-card">
+
+                <h3>1. Cover Image</h3>
+
+                <label class="upload-area cover-upload-area"
+                       id="coverUploadArea"
+                       for="coverImage">
+
+                    <div class="cover-upload-prompt">
+
+                        <strong>+ Select Cover Image</strong>
+
+                        <span class="help-text">
+                            Choose the image in which your data will be hidden.
+                        </span>
+
+                    </div>
+
+                    <img
+                        id="coverPreview"
+                        class="cover-preview"
+                        alt="Selected cover image preview"
+                    >
+
+                    <input
+                        type="file"
+                        id="coverImage"
+                        name="cover_image"
+                        accept="image/png,image/jpeg,image/bmp,image/webp"
+                    >
+
+                </label>
+
+                <div id="coverFileName" class="file-name">
+                    No image selected
+                </div>
+
+                <div id="coverStatus" class="status-message"></div>
+
+            </div>
+
+
+            <!-- 2. DATA TYPE AND CAPACITY -->
+
+            <div class="encryption-card">
+
+                <h3>2. Data Type & Capacity</h3>
+
+                <label class="field-label" for="payloadType">
+                    Select data type
+                </label>
+
+                <select
+                    class="form-control"
+                    id="payloadType"
+                    name="payload_type"
+                    disabled
+                >
+                    <option value="TEXT">Text</option>
+                    <option value="FILE">File</option>
+                </select>
+
+                <div class="capacity-box">
+
+                    <small>Estimated Image Capacity</small>
+
+                    <strong id="capacityMB">0.00 MB</strong>
+
+                    <small id="capacityDetails">
+                        Select a cover image first
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <!-- 3. SECRET DATA -->
+
+            <div class="encryption-card">
+
+                <h3>3. Secret Data</h3>
+
+                <!-- TEXT INPUT -->
+
+                <div id="textInputSection">
+
+                    <label class="field-label" for="secretText">
+                        Enter secret text
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        id="secretText"
+                        name="secret_text"
+                        placeholder="Enter your confidential message..."
+                        disabled
+                    ></textarea>
+
+                </div>
+
+                <!-- FILE INPUT -->
+
+                <div id="fileInputSection"
+                     class="file-input-layout hidden-field">
+
+                    <label class="upload-area" for="secretFile">
+
+                        <strong>+ Select Secret File</strong>
+
+                        <span class="help-text">
+                            Select a file that fits within the available capacity.
+                        </span>
+
+                        <input
+                            type="file"
+                            id="secretFile"
+                            name="secret_file"
+                            disabled
+                        >
+
+                    </label>
+
+                    <!-- IMAGE OR GENERAL FILE PREVIEW -->
+
+                    <div id="secretFilePreview" class="file-preview">
+
+                        <img
+                            id="secretImagePreview"
+                            class="secret-image-preview"
+                            alt="Secret image preview"
+                        >
+
+                        <div id="secretFileIcon" class="file-preview-icon">
+                            📄
+                        </div>
+
+                        <div id="secretPreviewName"
+                             class="file-preview-name"></div>
+
+                        <div id="secretPreviewSize"
+                             class="file-preview-size"></div>
+
+                    </div>
+
+                    <div id="secretFileName" class="file-name">
+                        No file selected
+                    </div>
+
+                    <div id="fileStatus" class="status-message"></div>
+
+                </div>
+
+            </div>
+
+
+            <!-- 4. AUTHENTICATION -->
+
+            <div class="encryption-card">
+
+                <h3>4. Authentication</h3>
+
+                <div class="radio-options">
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="authentication_type"
+                            value="QA"
+                            checked
+                            disabled
+                        >
+                        Question & Answer
+                    </label>
+
+                    <label>
+                        <input
+                            type="radio"
+                            name="authentication_type"
+                            value="KEY"
+                            disabled
+                        >
+                        Secret Key
+                    </label>
+
+                </div>
+
+                <div id="qaSection">
+
+                    <label class="field-label" for="securityQuestion">
+                        Security question
+                    </label>
+
+                    <select
+                        class="form-control"
+                        id="securityQuestion"
+                        name="security_question"
+                        disabled
+                    >
+                        <option value="">Select a question</option>
+
+                        <option value="What was the name of your first pet?">
+                            What was the name of your first pet?
+                        </option>
+
+                        <option value="What is your favourite childhood place?">
+                            What is your favourite childhood place?
+                        </option>
+
+                        <option value="What was your childhood nickname?">
+                            What was your childhood nickname?
+                        </option>
+
+                        <option value="custom">
+                            Write my own question
+                        </option>
+
+                    </select>
+
+                    <input
+                        class="form-control hidden-field"
+                        type="text"
+                        id="customQuestion"
+                        name="custom_question"
+                        placeholder="Enter your custom question"
+                        disabled
+                    >
+
+                    <label class="field-label" for="securityAnswer">
+                        Your answer
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="password"
+                        id="securityAnswer"
+                        name="security_answer"
+                        placeholder="Enter your secret answer"
+                        autocomplete="off"
+                        disabled
+                    >
+
+                </div>
+
+                <div id="keySection" class="hidden-field">
+
+                    <label class="field-label" for="secretKey">
+                        Secret key
+                    </label>
+
+                    <div class="generate-row">
+
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="secretKey"
+                            name="secret_key"
+                            placeholder="Generate or enter a key"
+                            autocomplete="off"
+                            disabled
+                        >
+
+                        <button
+                            type="button"
+                            class="secondary-button"
+                            id="generateKey"
+                        >
+                            Generate Key
+                        </button>
+
+                    </div>
+
+                    <p class="help-text">
+                        Save your generated key safely. You will need
+                        the same key to decrypt your image.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- 5. OUTPUT IMAGE NAME -->
+
+            <div class="encryption-card">
+
+                <h3>5. Output Image Name</h3>
+
+                <label class="field-label" for="outputName">
+                    Image name (optional)
+                </label>
+
+                <input
+                    class="form-control"
+                    type="text"
+                    id="outputName"
+                    name="output_name"
+                    placeholder="Enter name without extension"
+                    maxlength="100"
+                    disabled
+                >
+
+                <p class="help-text">
+                    Leave empty to use the original image name.
+                    PNG extension will be added automatically.
+                </p>
+
+            </div>
+
+
+            <!-- 6. ENCRYPT -->
+
+            <div class="encryption-card">
+
+                <h3>6. Encrypt</h3>
+
+                <p class="help-text"
+                   style="text-align:center;margin-bottom:16px;">
+                    Review your selected image and secret data before
+                    starting encryption.
+                </p>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="encryptButton"
+                    disabled
+                >
+                    🔒 Encrypt Data
+                </button>
+
+                <div
+                    id="formStatus"
+                    class="status-message"
+                    aria-live="polite"
+                ></div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const isAuthenticated =
+        {{ 'true' if session.get('user_id') else 'false' }};
+
+    const loginUrl =
+        {{ url_for('auth.login', next=url_for('home', _anchor='encryption')) | tojson }};
+
+
+    // ELEMENT REFERENCES
+
+    const coverImage = document.getElementById("coverImage");
+    const coverUploadArea = document.getElementById("coverUploadArea");
+    const coverPreview = document.getElementById("coverPreview");
+    const coverFileName = document.getElementById("coverFileName");
+    const coverStatus = document.getElementById("coverStatus");
+
+    const payloadType = document.getElementById("payloadType");
+
+    const capacityMB = document.getElementById("capacityMB");
+    const capacityDetails = document.getElementById("capacityDetails");
+
+    const secretText = document.getElementById("secretText");
+    const secretFile = document.getElementById("secretFile");
+
+    const textInputSection = document.getElementById("textInputSection");
+    const fileInputSection = document.getElementById("fileInputSection");
+
+    const secretFileName = document.getElementById("secretFileName");
+    const fileStatus = document.getElementById("fileStatus");
+
+    const secretFilePreview = document.getElementById("secretFilePreview");
+    const secretImagePreview = document.getElementById("secretImagePreview");
+    const secretFileIcon = document.getElementById("secretFileIcon");
+    const secretPreviewName = document.getElementById("secretPreviewName");
+    const secretPreviewSize = document.getElementById("secretPreviewSize");
+
+    const securityQuestion = document.getElementById("securityQuestion");
+    const customQuestion = document.getElementById("customQuestion");
+    const securityAnswer = document.getElementById("securityAnswer");
+
+    const secretKey = document.getElementById("secretKey");
+    const generateKey = document.getElementById("generateKey");
+
+    const outputName = document.getElementById("outputName");
+    const encryptButton = document.getElementById("encryptButton");
+
+    const formStatus = document.getElementById("formStatus");
+
+    const authenticationRadios =
+        document.querySelectorAll('input[name="authentication_type"]');
+
+
+    // STATE
+
+    let rawCapacityBytes = 0;
+    let imageReady = false;
+
+    let coverPreviewUrl = null;
+    let secretPreviewUrl = null;
+
+
+    // OBJECT URL CLEANUP
+
+    function releaseCoverPreview() {
+
+        if (coverPreviewUrl) {
+            URL.revokeObjectURL(coverPreviewUrl);
+            coverPreviewUrl = null;
+        }
+
+        coverPreview.removeAttribute("src");
+        coverUploadArea.classList.remove("has-preview");
+
+    }
+
+
+    function releaseSecretPreview() {
+
+        if (secretPreviewUrl) {
+            URL.revokeObjectURL(secretPreviewUrl);
+            secretPreviewUrl = null;
+        }
+
+        secretImagePreview.removeAttribute("src");
+        secretImagePreview.style.display = "none";
+
+        secretFileIcon.style.display = "block";
+
+        secretFilePreview.classList.remove("visible");
+
+    }
+
+
+    function formatFileSize(bytes) {
+
+        if (bytes < 1024) {
+            return bytes + " Bytes";
+        }
+
+        if (bytes < 1024 * 1024) {
+            return (bytes / 1024).toFixed(2) + " KB";
+        }
+
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+
+    }
+
+
+    // STATUS HELPERS
+
+    function setStatus(element, message, isError) {
+
+        element.textContent = message;
+
+        element.className = "status-message " +
+            (isError ? "status-error" : "status-success");
+
+    }
+
+
+    function clearStatus(element) {
+
+        element.textContent = "";
+        element.className = "status-message";
+
+    }
+
+
+    // AUTHENTICATION
+
+    function getAuthenticationType() {
+
+        const selected = document.querySelector(
+            'input[name="authentication_type"]:checked'
+        );
+
+        return selected ? selected.value : "QA";
+
+    }
+
+
+    function updateAuthentication() {
+
+        const type = getAuthenticationType();
+
+        document.getElementById("qaSection")
+            .classList.toggle("hidden-field", type !== "QA");
+
+        document.getElementById("keySection")
+            .classList.toggle("hidden-field", type !== "KEY");
+
+        securityQuestion.disabled = !imageReady || type !== "QA";
+
+        securityAnswer.disabled = !imageReady || type !== "QA";
+
+        customQuestion.disabled = !imageReady ||
+            type !== "QA" ||
+            securityQuestion.value !== "custom";
+
+        secretKey.disabled = !imageReady || type !== "KEY";
+
+    }
+
+
+    // DATA TYPE
+
+    function updateDataType(resetFile = false) {
+
+        const isFile = payloadType.value === "FILE";
+
+        textInputSection.classList.toggle("hidden-field", isFile);
+
+        fileInputSection.classList.toggle("hidden-field", !isFile);
+
+        secretText.disabled = !imageReady || isFile;
+
+        secretFile.disabled = !imageReady || !isFile;
+
+        if (resetFile) {
+
+            secretFile.value = "";
+
+            secretFileName.textContent = "No file selected";
+
+            clearStatus(fileStatus);
+
+            releaseSecretPreview();
+
+        }
+
+    }
+
+
+    // CONTROL UPDATES
+
+    function updateControls() {
+
+        payloadType.disabled = !imageReady;
+
+        outputName.disabled = !imageReady;
+
+        authenticationRadios.forEach(function (radio) {
+
+            radio.disabled = !imageReady;
+
+        });
+
+        updateAuthentication();
+
+        updateDataType();
+
+        validateForm();
+
+    }
+
+
+    // FORM VALIDATION
+
+    function validateForm() {
+
+        let valid = imageReady && rawCapacityBytes > 0;
+
+        if (payloadType.value === "TEXT") {
+
+            valid = valid && secretText.value.trim().length > 0;
+
+        } else {
+
+            valid = valid &&
+                secretFile.files.length > 0 &&
+                secretFile.files[0].size <= rawCapacityBytes;
+
+        }
+
+
+        if (getAuthenticationType() === "QA") {
+
+            const question = securityQuestion.value === "custom"
+                ? customQuestion.value.trim()
+                : securityQuestion.value;
+
+            valid = valid &&
+                question.length > 0 &&
+                securityAnswer.value.trim().length > 0;
+
+        } else {
+
+            valid = valid && secretKey.value.trim().length > 0;
+
+        }
+
+        encryptButton.disabled = !valid;
+
+    }
+
+
+    // GUEST LOGIN CHECK
+
+    coverImage.addEventListener("click", function (event) {
+
+        if (!isAuthenticated) {
+
+            event.preventDefault();
+
+            window.location.href = loginUrl;
+
+        }
+
+    });
+
+
+    // COVER IMAGE SELECTION
+
+    coverImage.addEventListener("change", function () {
+
+        const file = coverImage.files[0];
+
+        releaseCoverPreview();
+
+        imageReady = false;
+        rawCapacityBytes = 0;
+
+        updateControls();
+
+        clearStatus(coverStatus);
+
+        if (!file) {
+
+            coverFileName.textContent = "No image selected";
+
+            capacityMB.textContent = "0.00 MB";
+
+            capacityDetails.textContent = "Select a cover image first";
+
+            return;
+
+        }
+
+
+        const allowedTypes = [
+            "image/png",
+            "image/jpeg",
+            "image/bmp",
+            "image/webp"
+        ];
+
+
+        if (!allowedTypes.includes(file.type)) {
+
+            coverImage.value = "";
+
+            coverFileName.textContent = "No image selected";
+
+            capacityMB.textContent = "0.00 MB";
+
+            capacityDetails.textContent = "Select a valid image";
+
+            setStatus(
+                coverStatus,
+                "Unsupported image format.",
+                true
+            );
+
+            return;
+
+        }
+
+
+        coverFileName.textContent = file.name;
+
+        const image = new Image();
+
+        const objectUrl = URL.createObjectURL(file);
+
+
+        image.onload = function () {
+
+            const width = image.naturalWidth;
+            const height = image.naturalHeight;
+
+            rawCapacityBytes = Math.floor(
+                (width * height * 3) / 8
+            );
+
+            capacityMB.textContent =
+                (rawCapacityBytes / (1024 * 1024)).toFixed(2) + " MB";
+
+            capacityDetails.textContent =
+                width + " × " + height + " pixels";
+
+
+            // DISPLAY ORIGINAL IMAGE ASPECT RATIO
+
+            coverPreviewUrl = objectUrl;
+
+            coverPreview.src = coverPreviewUrl;
+
+            coverUploadArea.classList.add("has-preview");
+
+
+            imageReady = true;
+
+            updateControls();
+
+            setStatus(
+                coverStatus,
+                "Cover image selected successfully.",
+                false
+            );
+
+        };
+
+
+        image.onerror = function () {
+
+            URL.revokeObjectURL(objectUrl);
+
+            coverImage.value = "";
+
+            coverFileName.textContent = "No image selected";
+
+            capacityMB.textContent = "0.00 MB";
+
+            capacityDetails.textContent =
+                "Unable to read image dimensions";
+
+            imageReady = false;
+
+            rawCapacityBytes = 0;
+
+            updateControls();
+
+            setStatus(
+                coverStatus,
+                "Invalid or unreadable image.",
+                true
+            );
+
+        };
+
+
+        image.src = objectUrl;
+
+    });
+
+
+    // TEXT / FILE SWITCHING
+
+    payloadType.addEventListener("change", function () {
+
+        updateDataType(true);
+
+        validateForm();
+
+    });
+
+
+    secretText.addEventListener("input", validateForm);
+
+
+    // SECRET FILE SELECTION
+
+    secretFile.addEventListener("change", function () {
+
+        const file = secretFile.files[0];
+
+        releaseSecretPreview();
+
+        clearStatus(fileStatus);
+
+        if (!file) {
+
+            secretFileName.textContent = "No file selected";
+
+            validateForm();
+
+            return;
+
+        }
+
+
+        secretFileName.textContent = file.name;
+
+
+        // CHECK AVAILABLE RAW CAPACITY
+
+        if (file.size > rawCapacityBytes) {
+
+            secretFile.value = "";
+
+            secretFileName.textContent = "No file selected";
+
+            setStatus(
+                fileStatus,
+                "File exceeds the available image capacity. Please select a smaller file.",
+                true
+            );
+
+            validateForm();
+
+            return;
+
+        }
+
+
+        // SHOW SELECTED FILE DETAILS
+
+        secretPreviewName.textContent = file.name;
+
+        secretPreviewSize.textContent =
+            formatFileSize(file.size);
+
+        secretFilePreview.classList.add("visible");
+
+
+        // IMAGE FILE: SHOW IMAGE PREVIEW
+
+        if (file.type.startsWith("image/")) {
+
+            secretPreviewUrl = URL.createObjectURL(file);
+
+            secretImagePreview.src = secretPreviewUrl;
+
+            secretImagePreview.style.display = "block";
+
+            secretFileIcon.style.display = "none";
+
+            secretImagePreview.onerror = function () {
+
+                secretImagePreview.style.display = "none";
+
+                secretFileIcon.style.display = "block";
+
+            };
+
+        } else {
+
+            // NON-IMAGE FILE: SHOW FILE ICON
+
+            secretImagePreview.style.display = "none";
+
+            secretFileIcon.style.display = "block";
+
+        }
+
+
+        setStatus(
+            fileStatus,
+            "File selected successfully.",
+            false
+        );
+
+        validateForm();
+
+    });
+
+
+    // AUTHENTICATION TYPE SWITCHING
+
+    authenticationRadios.forEach(function (radio) {
+
+        radio.addEventListener("change", function () {
+
+            updateAuthentication();
+
+            validateForm();
+
+        });
+
+    });
+
+
+    // CUSTOM SECURITY QUESTION
+
+    securityQuestion.addEventListener("change", function () {
+
+        const custom = securityQuestion.value === "custom";
+
+        customQuestion.classList.toggle("hidden-field", !custom);
+
+        customQuestion.disabled = !imageReady || !custom;
+
+        if (!custom) {
+
+            customQuestion.value = "";
+
+        }
+
+        validateForm();
+
+    });
+
+
+    securityAnswer.addEventListener("input", validateForm);
+
+    customQuestion.addEventListener("input", validateForm);
+
+    secretKey.addEventListener("input", validateForm);
+
+
+    // SECURE RANDOM KEY GENERATION
+
+    generateKey.addEventListener("click", function () {
+
+        if (!window.crypto || !window.crypto.getRandomValues) {
+
+            alert(
+                "Secure key generation is not supported by this browser."
+            );
+
+            return;
+
+        }
+
+
+        const randomBytes = new Uint8Array(32);
+
+        window.crypto.getRandomValues(randomBytes);
+
+        let binary = "";
+
+        randomBytes.forEach(function (byte) {
+
+            binary += String.fromCharCode(byte);
+
+        });
+
+
+        const generatedKey = btoa(binary)
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/g, "");
+
+
+        secretKey.value = generatedKey;
+
+        validateForm();
+
+    });
+
+
+    // FORM SUBMISSION VALIDATION
+
+    document.getElementById("encryptionForm")
+        .addEventListener("submit", function (event) {
+
+            if (!isAuthenticated) {
+
+                event.preventDefault();
+
+                window.location.href = loginUrl;
+
+                return;
+
+            }
+
+
+            if (!imageReady || encryptButton.disabled) {
+
+                event.preventDefault();
+
+                setStatus(
+                    formStatus,
+                    "Please complete all required fields.",
+                    true
+                );
+
+                return;
+
+            }
+
+
+            const type = getAuthenticationType();
+
+
+            if (
+                type === "QA" &&
+                securityQuestion.value === "custom" &&
+                !customQuestion.value.trim()
+            ) {
+
+                event.preventDefault();
+
+                setStatus(
+                    formStatus,
+                    "Please enter your custom security question.",
+                    true
+                );
+
+                return;
+
+            }
+
+        });
+
+
+    // INITIALIZE
+
+    updateControls();
+
+
+    // CLEAN UP PREVIEW URLS WHEN LEAVING THE PAGE
+
+    window.addEventListener("pagehide", function () {
+
+        releaseCoverPreview();
+
+        releaseSecretPreview();
+
+    });
+
+});
+
+</script>
+
+{% endblock %}
