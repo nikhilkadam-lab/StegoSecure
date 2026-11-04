@@ -13,7 +13,8 @@
 
 .decrypt-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 560px);
+    justify-content: center;
     gap: 24px;
 }
 
@@ -186,28 +187,7 @@
 
             </div>
 
-            <!-- PREVIOUS UPLOADS -->
 
-            <div class="decrypt-card">
-
-                <h3>2. Previous Uploads</h3>
-
-                <div class="decrypt-upload"
-                     style="cursor:default;">
-
-                    <strong>Previous encrypted images</strong>
-
-                    <p class="help-text">
-                        Your previous uploads will appear here.
-                    </p>
-
-                    <p style="color:#008b9b;">
-                        Coming soon
-                    </p>
-
-                </div>
-
-            </div>
 
         </div>
 
@@ -594,6 +574,54 @@ preview.src = previewObjectUrl;
             link.remove();
 
         });
+
+    // Automatically load a saved gallery image when arriving from Previous Images.
+    const galleryId = new URLSearchParams(window.location.search)
+        .get("gallery_id");
+
+    if (galleryId) {
+        if (!/^\d+$/.test(galleryId)) {
+            status.textContent = "Invalid saved image reference.";
+        } else {
+            status.textContent = "Loading your saved encrypted image...";
+
+            fetch(`/previous/${galleryId}/file`, {
+                method: "GET",
+                credentials: "same-origin"
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(
+                        data.error || "Unable to load the saved image."
+                    );
+                }
+
+                const blob = await response.blob();
+                const filename =
+                    response.headers.get("X-File-Name") ||
+                    "encrypted_image.png";
+
+                const file = new File(
+                    [blob],
+                    filename,
+                    { type: "image/png" }
+                );
+
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+
+                imageInput.files = transfer.files;
+
+                imageInput.dispatchEvent(
+                    new Event("change", { bubbles: true })
+                );
+            })
+            .catch(error => {
+                status.textContent = error.message;
+            });
+        }
+    }
 
 })();
 </script>

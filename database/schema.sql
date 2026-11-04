@@ -65,7 +65,11 @@ CREATE TABLE gallery (
     output_filename VARCHAR(255) NULL,
     file_size_bytes BIGINT UNSIGNED NULL,
     uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NULL,
+
     KEY idx_gallery_user_date (user_id, uploaded_at),
+    KEY idx_gallery_expiry (expires_at),
+
     CONSTRAINT fk_gallery_user
         FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE CASCADE

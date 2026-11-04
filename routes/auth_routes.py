@@ -9,6 +9,7 @@ from flask import (
     current_app
 )
 from services.auth_service import register_user, authenticate_user
+from services.credit_service import get_remaining_credits
 from email_validator import validate_email, EmailNotValidError
 
 auth_bp = Blueprint("auth", __name__)
@@ -121,7 +122,20 @@ def dashboard():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
 
-    return render_template("home.html")
+    try:
+        remaining_credits = get_remaining_credits(session["user_id"])
+    except Exception:
+        current_app.logger.exception(
+            "Unable to retrieve encryption credits for user_id=%s",
+            session["user_id"],
+        )
+        remaining_credits = None
+
+    return render_template(
+        "home.html",
+        banner_url=url_for("site_banner"),
+        remaining_credits=remaining_credits,
+    )
 
 
 @auth_bp.route("/logout", methods=["POST"])

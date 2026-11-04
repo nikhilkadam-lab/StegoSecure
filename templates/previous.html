@@ -1,0 +1,251 @@
+
+{% extends "base.html" %}
+
+{% block title %}StegoSecure | Previous Encrypted Images{% endblock %}
+
+{% block extra_css %}
+
+.previous-section {
+    max-width: 1150px;
+    margin: 40px auto 55px;
+    padding: 0 22px;
+}
+
+.previous-header {
+    margin-bottom: 25px;
+}
+
+.previous-header h1 {
+    margin: 0 0 8px;
+    color: #087f8c;
+    font-size: 27px;
+}
+
+.previous-header p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.previous-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 20px;
+}
+
+.previous-card {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #c9dfe5;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px #092a3b08;
+}
+
+.previous-image-preview {
+    width: 100%;
+    height: 190px;
+    object-fit: contain;
+    background: #f3f8fa;
+    border-radius: 8px;
+    border: 1px solid #d8e7eb;
+    margin-bottom: 15px;
+}
+
+.previous-card h3 {
+    margin: 0 0 15px;
+    color: #087f8c;
+    overflow-wrap: anywhere;
+    font-size: 17px;
+}
+
+.previous-details {
+    margin-bottom: 17px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #64748b;
+    overflow-wrap: anywhere;
+}
+
+.previous-details strong {
+    color: #203647;
+}
+
+.previous-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.previous-actions a,
+.previous-actions button {
+    display: inline-block;
+    padding: 9px 13px;
+    border: 0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.previous-download {
+    background: #087f8c;
+    color: #fff;
+}
+
+.previous-decrypt {
+    background: #e5f7f4;
+    color: #087f8c;
+}
+
+.previous-delete {
+    background: #fff0f0;
+    color: #b42318;
+}
+
+.previous-empty {
+    padding: 35px 20px;
+    text-align: center;
+    background: #fff;
+    border: 1px dashed #a9cbd1;
+    border-radius: 12px;
+    color: #64748b;
+}
+
+.previous-empty h3 {
+    color: #087f8c;
+    margin-top: 0;
+}
+
+.previous-back {
+    display: inline-block;
+    margin-top: 22px;
+    color: #087f8c;
+    font-weight: 600;
+}
+
+@media(max-width: 480px) {
+    .previous-section {
+        padding: 0 14px;
+    }
+
+    .previous-actions a,
+    .previous-actions button {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+{% endblock %}
+
+{% block content %}
+
+<section class="previous-section">
+
+    <div class="previous-header">
+        <h1>Previous Encrypted Images</h1>
+        <p>
+            View and manage your encrypted images.
+            Images are automatically removed after 30 days.
+        </p>
+    </div>
+
+    {% if images %}
+
+        <div class="previous-grid">
+
+            {% for image in images %}
+
+                    <article class="previous-card">
+
+                        <img
+                            src="{{ url_for('previous_image_file', image_id=image.id) }}"
+                            class="previous-image-preview"
+                            alt="Encrypted image preview"
+                            loading="lazy"
+                        >
+
+                        <h3>
+                        {{ image.output_filename or "Encrypted image" }}
+                    </h3>
+
+                    <div class="previous-details">
+
+                        <div>
+                            <strong>Original file:</strong>
+                            {{ image.original_filename or "Not available" }}
+                        </div>
+
+                        <div>
+                            <strong>File size:</strong>
+                            {% if image.file_size_bytes is not none %}
+                                {{ "%.2f"|format(image.file_size_bytes / 1048576) }} MB
+                            {% else %}
+                                Not available
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <strong>Uploaded:</strong>
+                            {{ image.uploaded_at.strftime("%d %b %Y, %I:%M %p") if image.uploaded_at else "Not available" }}
+                        </div>
+
+                        <div>
+                            <strong>Expires:</strong>
+                            {{ image.expires_at.strftime("%d %b %Y, %I:%M %p") if image.expires_at else "Not available" }}
+                        </div>
+
+                    </div>
+
+                    <div class="previous-actions">
+
+                        <a class="previous-download"
+                           href="{{ url_for('download_previous_image', image_id=image.id) }}">
+                            Download
+                        </a>
+
+                        <a class="previous-decrypt"
+                           href="{{ url_for('decryption_page', gallery_id=image.id) }}">
+                            Decrypt
+                        </a>
+
+                        <form method="POST"
+                              action="{{ url_for('delete_previous_image', image_id=image.id) }}"
+                              onsubmit="return confirm('Are you sure you want to permanently delete this encrypted image?');">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token() }}">
+
+                            <button type="submit" class="previous-delete">
+                                Delete
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="previous-empty">
+            <h3>No previous encrypted images</h3>
+            <p>Images you encrypt will appear here.</p>
+        </div>
+
+    {% endif %}
+
+    <a class="previous-back"
+       href="{{ url_for('decryption_page') }}">
+        ← Back to Decryption
+    </a>
+
+</section>
+
+{% endblock %}

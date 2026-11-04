@@ -22,6 +22,10 @@ from PIL import Image
 
 from config import BASE_DIR, Config
 from services.site_service import get_active_banner
+from services.credit_service import (
+    get_remaining_credits,
+    consume_encryption_credit,
+)
 
 from services.encryption_service import (
     encrypt_payload,
@@ -43,6 +47,21 @@ from utils.validators import (
     MAX_IMAGE_PIXELS,
 )
 
+import os
+
+from services.storage_service import (
+    save_encrypted_image,
+    get_encrypted_image_path,
+    delete_encrypted_image,
+)
+
+from services.gallery_service import (
+    create_gallery_record_and_consume_credit,
+    get_user_gallery,
+    get_user_gallery_image,
+    delete_user_gallery_record,
+    get_user_gallery_image_for_delete,
+)
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -81,9 +100,23 @@ def load_encrypted_png(uploaded):
 
 @app.route("/")
 def home():
+    remaining_credits = None
+
+    if "user_id" in session:
+        try:
+            remaining_credits = get_remaining_credits(
+                session["user_id"]
+            )
+        except Exception:
+            app.logger.exception(
+                "Unable to retrieve encryption credits for user_id=%s",
+                session["user_id"],
+            )
+
     return render_template(
         "home.html",
         banner_url=url_for("site_banner"),
+        remaining_credits=remaining_credits,
     )
 
 
@@ -99,7 +132,31 @@ def encrypt():
         )
 
     try:
+        # Check the user's available encryption credits first.
+        remaining_credits = get_remaining_credits(session["user_id"])
+
+        if remaining_credits is None:
+            app.logger.error(
+                "Missing encryption credit record for user_id=%s",
+                session["user_id"],
+            )
+            flash(
+                "Your encryption credit balance could not be found. "
+                "Please contact support.",
+                "encryption_error",
+            )
+            return redirect(url_for("home", _anchor="encryption"))
+
+        if remaining_credits <= 0:
+            flash(
+                "You have no encryption credits remaining. "
+                "Purchase more credits to encrypt another image.",
+                "encryption_error",
+            )
+            return redirect(url_for("home", _anchor="encryption"))
+
         # 1. Validate and load the cover image
+
         cover = request.files.get("cover_image")
 
         validate_cover_image(cover)
@@ -213,7 +270,43 @@ def encrypt():
 
         output = BytesIO()
         stego_image.save(output, format="PNG")
+        output_bytes = output.getvalue()
+
+        # Save encrypted PNG to private storage.
+        storage_key, file_size = save_encrypted_image(
+            session["user_id"],
+            output_bytes,
+        )
+
+        try:
+            retention_days = int(
+                os.getenv("ENCRYPTED_IMAGE_RETENTION_DAYS", "30")
+            )
+
+            success = create_gallery_record_and_consume_credit(
+                user_id=session["user_id"],
+                storage_key=storage_key,
+                original_filename=cover.filename,
+                output_filename=f"{output_name}.png",
+                file_size_bytes=file_size,
+                retention_days=retention_days,
+            )
+
+            if not success:
+                raise ValueError(
+                    "Your encryption credit was used by another request. "
+                    "Please purchase more credits to continue."
+                )
+
+        except Exception:
+            # Remove stored image if database registration fails.
+            delete_encrypted_image(storage_key)
+            raise
+
+        output = BytesIO(output_bytes)
         output.seek(0)
+
+        
 
         return send_file(
             output,
@@ -231,6 +324,7 @@ def encrypt():
         app.logger.exception("Encryption operation failed")
         flash("Encryption failed. Please try again.", "error")
         return redirect(url_for("home", _anchor="encryption"))
+
 
 
 @app.route("/encrypt/capacity", methods=["GET"])
@@ -292,6 +386,129 @@ def encrypt_capacity():
         }), 500
 
 
+@app.route("/previous")
+def previous_images():
+    if "user_id" not in session:
+        return redirect(
+            url_for("auth.login", next=url_for("previous_images"))
+        )
+
+    try:
+        images = get_user_gallery(session["user_id"])
+        return render_template("previous.html", images=images)
+
+    except Exception:
+        app.logger.exception("Unable to load previous encrypted images")
+        flash("Unable to load your previous encrypted images.", "error")
+        return redirect(url_for("decryption_page"))
+
+
+@app.route("/previous/<int:image_id>/download")
+def download_previous_image(image_id):
+    if "user_id" not in session:
+        return redirect(
+            url_for("auth.login", next=url_for("previous_images"))
+        )
+
+    record = get_user_gallery_image(session["user_id"], image_id)
+
+    if not record:
+        flash("Image not found or its retention period has expired.", "error")
+        return redirect(url_for("previous_images"))
+
+    try:
+        image_path = get_encrypted_image_path(record["image_path"])
+
+        if image_path is None:
+            flash("The encrypted image file is no longer available.", "error")
+            return redirect(url_for("previous_images"))
+
+        response = send_file(
+            image_path,
+            mimetype="image/png",
+            as_attachment=True,
+            download_name=record["output_filename"] or "encrypted_image.png",
+            max_age=0,
+        )
+        response.headers["Cache-Control"] = "private, no-store"
+        return response
+
+    except Exception:
+        app.logger.exception("Previous image download failed")
+        flash("Unable to download this image.", "error")
+        return redirect(url_for("previous_images"))
+
+
+@app.route("/previous/<int:image_id>/file")
+def previous_image_file(image_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Please log in first."}), 401
+
+    record = get_user_gallery_image(session["user_id"], image_id)
+
+    if not record:
+        return jsonify({
+            "error": "Image not found or its retention period has expired."
+        }), 404
+
+    try:
+        image_path = get_encrypted_image_path(record["image_path"])
+
+        if image_path is None:
+            return jsonify({"error": "Image file is unavailable."}), 404
+
+        response = send_file(
+            image_path,
+            mimetype="image/png",
+            as_attachment=False,
+            max_age=0,
+        )
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["X-File-Name"] = (
+            record["output_filename"] or "encrypted_image.png"
+        )
+        return response
+
+    except Exception:
+        app.logger.exception("Previous image retrieval failed")
+        return jsonify({"error": "Unable to retrieve this image."}), 500
+
+
+@app.route("/previous/<int:image_id>/delete", methods=["POST"])
+def delete_previous_image(image_id):
+    if "user_id" not in session:
+        return redirect(
+            url_for("auth.login", next=url_for("previous_images"))
+        )
+
+    record = get_user_gallery_image_for_delete(
+        session["user_id"], image_id
+    )
+
+    if not record:
+        flash("Image not found.", "error")
+        return redirect(url_for("previous_images"))
+
+    try:
+        # Delete the physical file first. A missing file is already deleted.
+        delete_encrypted_image(record["image_path"])
+
+        # Only remove the database record after file deletion succeeds.
+        deleted = delete_user_gallery_record(
+            session["user_id"], image_id
+        )
+
+        if deleted:
+            flash("Encrypted image deleted successfully.", "success")
+        else:
+            flash("The image record could not be deleted.", "error")
+
+    except Exception:
+        app.logger.exception("Previous image deletion failed")
+        flash("Unable to delete this image. Please try again.", "error")
+
+    return redirect(url_for("previous_images"))
+    
 
 @app.route("/decrypt", methods=["GET"])
 def decryption_page():

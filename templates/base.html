@@ -303,6 +303,10 @@
 
             {% if session.get('user_id') %}
 
+                <a href="{{ url_for('previous_images') }}">
+                    Previous Images
+                </a>
+
                 <details class="profile-menu">
 
                     <summary class="profile-trigger">

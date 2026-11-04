@@ -279,6 +279,38 @@ textarea.form-control {
     font-size: 11px;
 }
 
+/* ENCRYPTION CREDITS */
+
+.credit-box {
+    margin-bottom: 14px;
+    padding: 12px;
+    border: 1px solid #c9e9e4;
+    border-radius: 9px;
+    background: #f0faf8;
+    text-align: center;
+}
+
+.credit-box strong {
+    display: block;
+    color: #087f8c;
+    font-size: 25px;
+    margin: 3px 0;
+}
+
+.credit-box small {
+    color: #64748b;
+    font-size: 11px;
+}
+
+.credit-box.exhausted {
+    border-color: #f0caca;
+    background: #fff5f5;
+}
+
+.credit-box.exhausted strong {
+    color: #c0392b;
+}
+
 /* HELP TEXT */
 
 .help-text {
@@ -754,6 +786,46 @@ textarea.form-control {
 
                 <h3>6. Encrypt</h3>
 
+                                {% if session.get('user_id') %}
+
+                    {% if remaining_credits is not none %}
+
+                        {% if remaining_credits > 0 %}
+
+                            <div class="credit-box">
+                                <small>YOUR ENCRYPTION CREDITS</small>
+                                <strong>{{ remaining_credits }}</strong>
+                                <small>Credits available</small>
+                            </div>
+
+                        {% else %}
+
+                            <div class="credit-box exhausted">
+                                <small>YOUR ENCRYPTION CREDITS</small>
+                                <strong>0</strong>
+                                <small>No credits remaining. Purchase more to continue.</small>
+                            </div>
+
+                        {% endif %}
+
+                    {% else %}
+
+                        <div class="credit-box exhausted">
+                            <strong>Unavailable</strong>
+                            <small>Your credit balance could not be retrieved.</small>
+                        </div>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <div class="credit-box">
+                        <strong>Login Required</strong>
+                        <small>Log in to view your encryption credits.</small>
+                    </div>
+
+                {% endif %}
+
                 <p class="help-text"
                    style="text-align:center;margin-bottom:16px;">
                     Review your selected image and secret data before
@@ -803,6 +875,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const isAuthenticated =
         {{ 'true' if session.get('user_id') else 'false' }};
+    
+    const hasEncryptionCredits =
+    {{ 'true' if remaining_credits is not none and remaining_credits > 0 else 'false' }};
 
     const loginUrl =
         {{ url_for('auth.login', next=url_for('home', _anchor='encryption')) | tojson }};
@@ -1171,7 +1246,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function validateForm() {
 
-        let valid = imageReady && rawCapacityBytes > 0;
+        let valid = hasEncryptionCredits &&
+            imageReady &&
+            rawCapacityBytes > 0;
 
         if (payloadType.value === "TEXT") {
 
@@ -1563,59 +1640,132 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    // FORM SUBMISSION VALIDATION
 
-    document.getElementById("encryptionForm")
-        .addEventListener("submit", function (event) {
+// FORM SUBMISSION AND AUTOMATIC DOWNLOAD
 
-            if (!isAuthenticated) {
+const encryptionForm = document.getElementById("encryptionForm");
 
-                event.preventDefault();
+encryptionForm.addEventListener("submit", async function (event) {
 
-                window.location.href = loginUrl;
+    event.preventDefault();
 
-                return;
+    if (!isAuthenticated) {
+        window.location.href = loginUrl;
+        return;
+    }
 
-            }
+    if (!imageReady || encryptButton.disabled) {
+        setStatus(
+            formStatus,
+            "Please complete all required fields.",
+            true
+        );
+        return;
+    }
 
+    const type = getAuthenticationType();
 
-            if (!imageReady || encryptButton.disabled) {
+    if (
+        type === "QA" &&
+        securityQuestion.value === "custom" &&
+        !customQuestion.value.trim()
+    ) {
+        setStatus(
+            formStatus,
+            "Please enter your custom security question.",
+            true
+        );
+        return;
+    }
 
-                event.preventDefault();
+    // Prevent duplicate submissions.
+    encryptButton.disabled = true;
+    encryptButton.textContent = "Encrypting...";
 
-                setStatus(
-                    formStatus,
-                    "Please complete all required fields.",
-                    true
-                );
+    setStatus(
+        formStatus,
+        "Please wait while your image is being encrypted...",
+        false
+    );
 
-                return;
+    try {
 
-            }
-
-
-            const type = getAuthenticationType();
-
-
-            if (
-                type === "QA" &&
-                securityQuestion.value === "custom" &&
-                !customQuestion.value.trim()
-            ) {
-
-                event.preventDefault();
-
-                setStatus(
-                    formStatus,
-                    "Please enter your custom security question.",
-                    true
-                );
-
-                return;
-
-            }
-
+        const response = await fetch(encryptionForm.action, {
+            method: "POST",
+            body: new FormData(encryptionForm),
+            credentials: "same-origin"
         });
+
+        // Backend redirects indicate a failed validation
+        // or an encryption error.
+        if (response.redirected) {
+            window.location.reload();
+            return;
+        }
+
+        const contentType =
+            response.headers.get("Content-Type") || "";
+
+        if (!response.ok || !contentType.includes("image/png")) {
+            throw new Error("Encryption failed. Please try again.");
+        }
+
+        // Receive the encrypted PNG.
+        const blob = await response.blob();
+
+        // Extract the generated filename.
+        const disposition =
+            response.headers.get("Content-Disposition") || "";
+
+        const filenameMatch = disposition.match(
+            /filename="?([^";]+)"?/i
+        );
+
+        const filename = filenameMatch
+            ? filenameMatch[1]
+            : "stegosecure_encrypted.png";
+
+        // Trigger automatic download.
+        const downloadUrl = URL.createObjectURL(blob);
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = downloadUrl;
+        downloadLink.download = filename;
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+
+        setStatus(
+            formStatus,
+            "Encryption successful! Your encrypted image is downloading.",
+            false
+        );
+
+        // Refresh the page to retrieve the updated credit balance
+        // and clear all form fields and previews.
+        setTimeout(function () {
+            URL.revokeObjectURL(downloadUrl);
+            window.location.reload();
+        }, 1000);
+
+    } catch (error) {
+
+        console.error("Encryption error:", error);
+
+        setStatus(
+            formStatus,
+            error.message || "Encryption failed. Please try again.",
+            true
+        );
+
+        encryptButton.textContent = "🔒 Encrypt Data";
+
+        validateForm();
+    }
+
+});
+
 
 
     // INITIALIZE
