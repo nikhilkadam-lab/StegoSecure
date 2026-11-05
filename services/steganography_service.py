@@ -158,14 +158,18 @@ def extract_payload(stego_image):
         available_capacity = get_image_capacity(stego_image)
 
         if payload_length <= 0:
-            raise ValueError("No valid payload found in this image.")
+            raise ValueError(
+                "This image does not contain a valid StegoSecure payload."
+            )
 
         if payload_length > MAX_PAYLOAD_BYTES:
-            raise ValueError("Embedded payload exceeds the allowed limit.")
+            raise ValueError(
+                "This image does not contain a valid StegoSecure payload."
+            )
 
         if payload_length > available_capacity:
             raise ValueError(
-                "Embedded payload length is invalid or the image is corrupted."
+                "This image does not contain a valid StegoSecure payload."
             )
 
         # Read the actual payload.

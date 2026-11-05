@@ -78,6 +78,10 @@ from routes.auth_routes import auth_bp
 
 app.register_blueprint(auth_bp)
 
+from routes.payment_routes import payment_bp
+
+app.register_blueprint(payment_bp)
+
 
 def load_encrypted_png(uploaded):
     """
