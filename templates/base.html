@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,19 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>{% block title %}StegoSecure{% endblock %}</title>
+    
+    <!-- Added modern font to match banner -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --navy: #071a2b;
-            --navy-light: #102b40;
-            --teal: #00c9a7;
-            --cyan: #35d5e8;
-            --primary: #087f8c;
-            --text: #203647;
-            --muted: #64748b;
-            --background: #f3f8fa;
-            --white: #ffffff;
-            --border: #d8e7eb;
+            /* New StegoSecure Cyber Theme */
+            --bg-main: #050510;
+            --bg-card: rgba(20, 25, 45, 0.6);
+            --navy: #0a0b1a;
+            --navy-light: #12142b;
+            --primary: #00E5FF; /* Neon Cyan */
+            --primary-hover: #00c4db;
+            --secondary: #B500FF; /* Neon Purple */
+            --text: #FFFFFF;
+            --muted: #A0A0C0;
+            --border: rgba(0, 229, 255, 0.2);
+            --glow: 0 0 15px rgba(0, 229, 255, 0.4);
+            --glow-purple: 0 0 15px rgba(181, 0, 255, 0.4);
         }
 
         * {
@@ -27,6 +34,7 @@
 
         html {
             scroll-behavior: smooth;
+            scroll-padding-top: 100px;
         }
 
         body {
@@ -34,39 +42,84 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
             color: var(--text);
-            background: var(--background);
+            background: var(--bg-main);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(0, 229, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(181, 0, 255, 0.05) 0%, transparent 50%);
         }
 
         a {
             text-decoration: none;
+            color: var(--primary);
+            transition: all 0.2s ease;
         }
 
         /* NAVIGATION */
 
         .navbar {
-            min-height: 64px;
+            min-height: 72px;
             padding: 0 4%;
-            background: var(--navy);
+            /* A slightly lighter, solid dark grey-blue for separation */
+            background: #0f1423; 
+            /* Removed the glowing border */
+            border-bottom: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 20px;
-            position: relative;
+            position: sticky;
+            top: 0;
             z-index: 20;
-            box-shadow: 0 3px 15px #071a2b20;
+            /* Simple dark shadow to lift it off the banner */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); 
         }
 
         .brand {
-            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             font-size: 23px;
             font-weight: 750;
-            letter-spacing: .3px;
+            letter-spacing: .5px;
+            text-decoration: none;
         }
 
-        .brand span {
-            color: var(--teal);
+        .brand-logo {
+            height: 65px; 
+            width: auto;  
+            object-fit: contain;
+            
+            /* THIS IS THE MAGIC LINE: Hides the dark square background */
+            mix-blend-mode: screen; 
+            
+            /* Optional: Adds a slight glow to make the neon pop */
+            filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.4));
+            
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .brand:hover .brand-logo {
+            transform: translateY(-2px); 
+            filter: drop-shadow(0 0 12px rgba(181, 0, 255, 0.8));
+        }
+
+        /* Match the text exactly like the banner: White + Cyan/Purple Gradient */
+        .brand-text {
+            display: flex;
+            align-items: center;
+        }
+
+        .text-stego {
+            color: #FFFFFF;
+        }
+
+        .text-secure {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-left: 2px;
         }
 
         .nav-links {
@@ -76,14 +129,15 @@
         }
 
         .nav-links > a {
-            color: #dce9f1;
+            color: var(--text);
             font-size: 14px;
             font-weight: 500;
-            transition: color .2s;
+            transition: color .2s, text-shadow .2s;
         }
 
         .nav-links > a:hover {
-            color: var(--teal);
+            color: var(--primary);
+            text-shadow: var(--glow);
         }
 
         .nav-auth {
@@ -93,15 +147,27 @@
         }
 
         .nav-auth .login-link {
-            color: white;
+            color: var(--text);
+        }
+        
+        .nav-auth .login-link:hover {
+            color: var(--primary);
+            text-shadow: var(--glow);
         }
 
         .nav-auth .register-link {
-            background: var(--teal);
-            color: var(--navy);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #fff;
             padding: 9px 17px;
             border-radius: 7px;
-            font-weight: 650;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+        }
+        
+        .nav-auth .register-link:hover {
+            box-shadow: 0 0 20px rgba(181, 0, 255, 0.6);
+            transform: translateY(-1px);
         }
 
         /* PROFILE */
@@ -111,40 +177,46 @@
         }
 
         .profile-trigger {
-    list-style: none;
-}
+            list-style: none;
+        }
 
-.profile-trigger::-webkit-details-marker {
-    display: none;
-}
+        .profile-trigger::-webkit-details-marker {
+            display: none;
+        }
 
-.profile-menu:hover .profile-dropdown {
-    display: block;
-}
+        .profile-menu:hover .profile-dropdown {
+            display: block;
+        }
 
-.profile-chevron {
-    font-size: 17px;
-    margin-left: 2px;
-}
+        .profile-chevron {
+            font-size: 17px;
+            margin-left: 2px;
+        }
 
-.profile-dropdown a,
-.profile-dropdown button {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        .profile-dropdown a,
+        .profile-dropdown button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .profile-trigger {
             display: flex;
             align-items: center;
             gap: 9px;
-            color: white;
+            color: var(--text);
             background: var(--navy-light);
-            border: 1px solid #315267;
+            border: 1px solid var(--border);
             padding: 7px 12px;
             border-radius: 25px;
             cursor: pointer;
             font: inherit;
+            transition: all 0.2s;
+        }
+        
+        .profile-trigger:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
         }
 
         .profile-icon {
@@ -153,9 +225,10 @@
             display: grid;
             place-items: center;
             border-radius: 50%;
-            background: var(--teal);
-            color: var(--navy);
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--primary);
             font-weight: bold;
+            border: 1px solid var(--primary);
         }
 
         .profile-name {
@@ -172,11 +245,12 @@
             top: calc(100% + 12px);
             right: 0;
             width: 210px;
-            background: white;
+            background: var(--navy-light);
             border: 1px solid var(--border);
             border-radius: 10px;
-            box-shadow: 0 10px 30px #00000020;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), var(--glow);
             padding: 8px;
+            backdrop-filter: blur(15px);
         }
 
         .profile-menu[open] .profile-dropdown {
@@ -195,11 +269,12 @@
             color: var(--text);
             font-size: 14px;
             cursor: pointer;
+            transition: all 0.2s;
         }
 
         .profile-dropdown a:hover,
         .profile-dropdown button:hover {
-            background: #eaf7f7;
+            background: rgba(0, 229, 255, 0.1);
             color: var(--primary);
         }
 
@@ -213,14 +288,32 @@
             flex: 1;
             width: 100%;
         }
+        
+        /* GLOWING FLASH MESSAGES */
+        .flash-message-container {
+            margin: 15px auto; 
+            max-width: 1100px; 
+            padding: 15px 20px; 
+            border-radius: 8px; 
+            background: rgba(0, 229, 255, 0.1); 
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+            text-align: center;
+            font-weight: 500;
+            animation: fadeIn 0.4s ease-out;
+        }
 
         /* FOOTER */
 
         .site-footer {
             background: var(--navy);
-            color: #c5d5df;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
             padding: 35px 5% 18px;
             margin-top: auto;
+            position: relative;
+            z-index: 10;
         }
 
         .footer-content {
@@ -233,39 +326,47 @@
 
         .footer-content h3,
         .footer-content h4 {
-            color: white;
+            color: var(--text);
             margin-top: 0;
         }
 
         .footer-content h3 span {
-            color: var(--teal);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .footer-content p {
             font-size: 13px;
             line-height: 1.7;
-            color: #a9bdca;
+            color: var(--muted);
             max-width: 400px;
         }
 
         .footer-content a {
             display: block;
             margin: 10px 0;
-            color: #b8cbd5;
+            color: var(--muted);
             font-size: 13px;
         }
 
         .footer-content a:hover {
-            color: var(--teal);
+            color: var(--primary);
+            text-shadow: var(--glow);
         }
 
         .footer-bottom {
-            border-top: 1px solid #294153;
+            border-top: 1px solid rgba(255,255,255,0.1);
             margin-top: 25px;
             padding-top: 17px;
             text-align: center;
             font-size: 12px;
-            color: #8fa7b6;
+            color: var(--muted);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @media(max-width: 700px) {
@@ -308,26 +409,29 @@
         }
 
         .nav-links > a:hover {
-    color: var(--teal);
-}
-.nav-logout {
-    margin: 0;
-}
+            color: var(--primary);
+        }
+        
+        .nav-logout {
+            margin: 0;
+        }
 
-.nav-logout button {
-    background: transparent;
-    border: none;
-    color: #dce9f1;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: inherit;
-    padding: 0;
-}
+        .nav-logout button {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0;
+            transition: color 0.2s, text-shadow 0.2s;
+        }
 
-.nav-logout button:hover {
-    color: var(--teal);
-}
+        .nav-logout button:hover {
+            color: var(--primary);
+            text-shadow: var(--glow);
+        }
 
         {% block extra_css %}{% endblock %}
     </style>
@@ -337,8 +441,12 @@
 
     <nav class="navbar">
 
+        <!-- Updated Brand with Logo -->
         <a href="{{ url_for('home') }}" class="brand">
-            Stego<span>Secure</span>
+            <img src="{{ url_for('serve_logo') }}" alt="StegoSecure Logo" class="brand-logo">
+            <div class="brand-text">
+                <span class="text-stego">Stego</span><span class="text-secure">Secure</span>
+            </div>
         </a>
 
         <div class="nav-links">
@@ -354,10 +462,8 @@
                 </a>
 
                 <a href="{{ url_for('payments.credits_page') }}">
-    Buy Credits
-</a>
-
-
+                    Buy Credits
+                </a>
 
             <details class="profile-menu">
                 <summary class="profile-trigger">
@@ -433,7 +539,8 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
                 {% if category != "encryption_error" %}
-                    <div style="margin: 15px auto; max-width: 1100px; padding: 12px 18px; border-radius: 6px; background: #eaf7f7; color: #203647;">
+                    <!-- Updated Flash Message to match dark theme -->
+                    <div class="flash-message-container">
                         {{ message }}
                     </div>
                 {% endif %}

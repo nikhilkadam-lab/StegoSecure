@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}My Profile | StegoSecure{% endblock %}
@@ -7,55 +6,61 @@
 .profile-page {
     width: calc(100% - 32px);
     max-width: 1090px;
-    margin: 27px auto 48px;
+    margin: 40px auto 60px;
+    color: var(--text);
 }
 
 .profile-heading {
-    margin-bottom: 24px;
+    margin-bottom: 30px;
+    text-align: center;
 }
 
 .profile-heading h1 {
-    margin: 0 0 6px;
-    color: #071a2b;
+    margin: 0 0 8px;
+    color: var(--primary);
     font-size: 28px;
     font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .profile-heading p {
     margin: 0;
-    color: #64748b;
-    font-size: 14px;
+    color: var(--muted);
+    font-size: 15px;
 }
 
 /* TOP TABS */
 .profile-tabs {
     display: flex;
     gap: 0;
-    border-bottom: 1px solid #d8e7eb;
-    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 25px;
+    justify-content: center;
 }
 
 .profile-tab {
-    min-width: 157px;
-    padding: 12px 20px;
+    min-width: 180px;
+    padding: 14px 20px;
     border: 0;
     border-bottom: 3px solid transparent;
     margin-bottom: -1px;
     background: transparent;
-    color: #64748b;
+    color: var(--muted);
     font: inherit;
-    font-size: 14px;
-    font-weight: 650;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .profile-tab:hover {
-    color: #087f8c;
+    color: var(--primary);
 }
 
 .profile-tab.active {
-    color: #087f8c;
-    border-bottom-color: #00c9a7;
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    text-shadow: var(--glow);
 }
 
 .tab-panel {
@@ -64,86 +69,103 @@
 
 .tab-panel.active {
     display: block;
+    animation: fadeIn 0.3s ease-out;
 }
 
 /* MAIN CARD */
 .profile-card {
-    padding: 23px;
-    background: #fff;
-    border: 1px solid #d8e7eb;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(7, 26, 43, .04);
+    padding: 30px;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .account-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: 20px;
 }
 
 .detail-item {
     min-width: 0;
-    padding: 16px;
-    background: #f3f8fa;
-    border: 1px solid #e8f0f3;
-    border-radius: 9px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.detail-item:hover {
+    border-color: rgba(0, 229, 255, 0.2);
+    background: rgba(0, 229, 255, 0.02);
 }
 
 .detail-label {
     display: block;
-    margin-bottom: 7px;
-    color: #64748b;
+    margin-bottom: 8px;
+    color: var(--muted);
     font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .detail-value {
     display: block;
-    color: #071a2b;
-    font-size: 15px;
-    font-weight: 700;
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 600;
     overflow-wrap: anywhere;
 }
 
 .credits-value {
-    color: #087f8c;
+    color: var(--primary);
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+    font-size: 20px;
 }
 
 /* ACTION BUTTONS */
 .profile-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 25px;
 }
 
 .action-button {
-    padding: 11px 17px;
-    border: 1px solid #e2ebef;
+    padding: 12px 18px;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: #eaf1f4;
-    color: #071a2b;
+    background: var(--navy-light);
+    color: var(--primary);
     font-family: inherit;
     font-size: 13px;
-    font-weight: 650;
+    font-weight: 600;
     cursor: pointer;
-    transition: .2s ease;
+    transition: all 0.2s ease;
 }
 
 .action-button:hover,
 .action-button.active {
-    background: #087f8c;
-    border-color: #087f8c;
-    color: white;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--bg-main);
+    box-shadow: var(--glow);
 }
 
 /* ACTION PANELS */
 .action-panel {
     display: none;
-    margin-top: 17px;
-    padding: 20px;
-    border: 1px solid #d8e7eb;
+    margin-top: 25px;
+    padding: 25px;
+    border: 1px solid rgba(0, 229, 255, 0.2);
     border-radius: 10px;
-    background: #fbfdfe;
+    background: rgba(0, 229, 255, 0.02);
+    animation: fadeIn 0.3s ease-out;
 }
 
 .action-panel.active {
@@ -151,72 +173,80 @@
 }
 
 .action-panel h2 {
-    margin: 0 0 17px;
-    color: #071a2b;
-    font-size: 17px;
+    margin: 0 0 20px;
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 600;
 }
 
 /* FORMS */
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 7px;
-    color: #203647;
+    margin-bottom: 8px;
+    color: var(--muted);
     font-size: 14px;
 }
 
 .form-group input {
     width: 100%;
-    max-width: 460px;
-    padding: 11px 13px;
-    border: 1px solid #d8e7eb;
+    max-width: 480px;
+    padding: 12px 15px;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: white;
-    color: #203647;
+    background: var(--navy-light);
+    color: var(--text);
     font: inherit;
     font-size: 14px;
+    transition: all 0.2s;
 }
 
 .form-group input:focus {
     outline: none;
-    border-color: #087f8c;
-    box-shadow: 0 0 0 3px rgba(8,127,140,.12);
+    border-color: var(--primary);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
 }
 
 .form-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 12px;
+    margin-top: 25px;
 }
 
 .primary-button,
 .cancel-button {
-    padding: 11px 18px;
-    border-radius: 7px;
+    padding: 12px 20px;
+    border-radius: 8px;
     font-family: inherit;
-    font-size: 13px;
-    font-weight: 650;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s;
 }
 
 .primary-button {
-    border: 1px solid #087f8c;
-    background: #087f8c;
+    border: 0;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
     color: white;
 }
 
 .primary-button:hover {
-    background: #066873;
+    box-shadow: 0 0 20px rgba(181, 0, 255, 0.5);
+    transform: translateY(-2px);
 }
 
 .cancel-button {
-    border: 1px solid #d8e7eb;
-    background: #eaf1f4;
-    color: #071a2b;
+    border: 1px solid var(--border);
+    background: var(--navy-light);
+    color: var(--text);
+}
+
+.cancel-button:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* FORGOT PASSWORD */
@@ -225,7 +255,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 15px;
 }
 
 .coming-soon-heading h2 {
@@ -235,14 +265,15 @@
 .coming-soon-label {
     padding: 5px 12px;
     border-radius: 20px;
-    background: #fff2d8;
-    color: #9a6100;
+    background: rgba(181, 0, 255, 0.15);
+    color: var(--secondary);
     font-size: 11px;
     font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .coming-soon p {
-    color: #64748b;
+    color: var(--muted);
     font-size: 14px;
     line-height: 1.6;
 }
@@ -251,6 +282,8 @@
 .history-table-wrapper {
     width: 100%;
     overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
 }
 
 .history-table {
@@ -260,18 +293,26 @@
 }
 
 .history-table th {
-    padding: 13px 14px;
-    background: #f3f8fa;
-    color: #64748b;
+    padding: 15px;
+    background: var(--navy-light);
+    color: var(--muted);
     text-align: left;
     white-space: nowrap;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 11px;
 }
 
 .history-table td {
-    padding: 14px;
-    border-bottom: 1px solid #e8eff2;
-    color: #203647;
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text);
     white-space: nowrap;
+}
+
+.history-table tbody tr:hover {
+    background: rgba(0, 229, 255, 0.02);
 }
 
 .history-table tbody tr:last-child td {
@@ -280,7 +321,7 @@
 
 .payment-status {
     display: inline-block;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
@@ -288,32 +329,37 @@
 }
 
 .status-success {
-    background: #dcfce7;
-    color: #166534;
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(0, 255, 136, 0.2);
 }
 
 .status-pending {
-    background: #fef3c7;
-    color: #92400e;
+    background: rgba(255, 193, 7, 0.1);
+    color: #FFC107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
 }
 
 .status-failed {
-    background: #fee2e2;
-    color: #991b1b;
+    background: rgba(255, 75, 75, 0.1);
+    color: var(--error);
+    border: 1px solid rgba(255, 75, 75, 0.2);
 }
 
 .status-other {
-    background: #eaf0f4;
-    color: #475569;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--muted);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .empty-history {
-    padding: 24px 12px;
+    padding: 30px 15px;
     border-radius: 8px;
-    background: #f8fbfc;
-    color: #64748b;
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--muted);
     text-align: center;
     font-size: 14px;
+    border: 1px dashed var(--border);
 }
 
 @media (max-width: 650px) {
@@ -323,12 +369,12 @@
     }
 
     .profile-card {
-        padding: 16px;
+        padding: 20px;
     }
 
     .account-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 12px;
     }
 
     .profile-actions {
@@ -348,7 +394,7 @@
     }
 
     .history-table {
-        min-width: 570px;
+        min-width: 600px;
     }
 
     .form-group input {
@@ -358,19 +404,19 @@
 
 /* LIVE PASSWORD VALIDATION */
 .password-requirements {
-    max-width: 460px;
-    margin: 10px 0 16px;
-    padding: 12px 15px;
-    background: #f3f8fa;
-    border: 1px solid #e2ebef;
+    max-width: 480px;
+    margin: 12px 0 20px;
+    padding: 15px;
+    background: rgba(0, 229, 255, 0.03);
+    border: 1px solid rgba(0, 229, 255, 0.1);
     border-radius: 8px;
 }
 
 .password-requirements p {
-    margin: 0 0 8px;
-    color: #475569;
-    font-size: 12px;
-    font-weight: 650;
+    margin: 0 0 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
 }
 
 .password-requirements ul {
@@ -380,13 +426,14 @@
 }
 
 .password-requirements li {
-    margin: 5px 0;
-    color: #dc2626;
+    margin: 6px 0;
+    color: var(--error);
     font-size: 12px;
+    transition: color 0.2s;
 }
 
 .password-requirements li.valid {
-    color: #15803d;
+    color: var(--success);
 }
 
 .password-requirements li::before {
@@ -400,16 +447,17 @@
 
 .password-feedback {
     display: block;
-    margin-top: 7px;
+    margin-top: 8px;
     font-size: 12px;
+    font-weight: 500;
 }
 
 .password-feedback.valid {
-    color: #15803d;
+    color: var(--success);
 }
 
 .password-feedback.invalid {
-    color: #dc2626;
+    color: var(--error);
 }
 
 @media (max-width: 650px) {
@@ -420,9 +468,14 @@
 
 .payment-id-cell {
     font-size: 12px;
-    color: #64748b;
+    color: var(--muted);
     overflow-wrap: anywhere;
     min-width: 150px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 {% endblock %}
 
@@ -624,7 +677,7 @@
                 <div class="coming-soon">
                     <div class="coming-soon-heading">
                         <h2>Forgot Password?</h2>
-                        <span class="coming-soon-label">Coming Soon</span>
+                        <span class="coming-soon-label">COMING SOON</span>
                     </div>
 
                     <p>
@@ -637,7 +690,7 @@
                         <input type="email"
                                id="registered_email"
                                value="{{ user.email }}"
-                               readonly>
+                               readonly style="opacity: 0.6; cursor: not-allowed;">
                     </div>
 
                     <div class="form-group">
@@ -651,11 +704,11 @@
                     <button type="button"
                             class="primary-button"
                             disabled
-                            style="opacity:.55; cursor:not-allowed;">
+                            style="opacity:.4; cursor:not-allowed; box-shadow: none; transform: none; background: var(--navy-light); color: var(--muted); border: 1px solid var(--border);">
                         Verify OTP
                     </button>
 
-                    <p>
+                    <p style="margin-top: 15px;">
                         After OTP verification, you will be able to enter
                         and confirm your new password.
                     </p>
@@ -670,7 +723,7 @@
     <section id="history-tab" class="tab-panel">
 
         <div class="profile-card">
-            <h2>Purchase History</h2>
+            <h2 style="margin-top: 0; color: var(--text); margin-bottom: 20px;">Purchase History</h2>
 
             {% if payment_history %}
             <div class="history-table-wrapper">
@@ -704,7 +757,7 @@
                                 {{ payment.credits if payment.credits is not none else '—' }}
                             </td>
 
-                            <td>
+                            <td style="color: var(--primary); font-weight: 600;">
                                 ₹{{ "%.2f"|format(payment.amount|float) }}
                             </td>
 

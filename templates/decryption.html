@@ -9,6 +9,15 @@
     max-width: 1100px;
     margin: 45px auto;
     padding: 20px;
+    color: var(--text);
+}
+
+.decrypt-section > h2 {
+    font-size: 28px;
+    margin-bottom: 35px;
+    color: var(--text);
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .decrypt-grid {
@@ -19,29 +28,37 @@
 }
 
 .decrypt-card {
-    background: white;
-    border: 1px solid #cfe1e8;
-    border-radius: 12px;
-    padding: 22px;
-    box-shadow: 0 4px 14px rgba(0,0,0,.04);
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    position: relative;
 }
 
 .decrypt-card h3 {
-    color: #008b9b;
+    color: var(--primary);
     text-align: center;
-    margin-bottom: 20px;
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .decrypt-upload {
     display: block;
     width: 100%;
     box-sizing: border-box;
-    border: 2px dashed #9acbd5;
-    border-radius: 10px;
-    padding: 30px 15px;
+    border: 2px dashed rgba(0, 229, 255, 0.4);
+    border-radius: 12px;
+    padding: 40px 20px;
     text-align: center;
     cursor: pointer;
-    background: #f6fbfc;
+    background: rgba(0, 229, 255, 0.02);
+    transition: all 0.3s ease;
 }
 
 .decrypt-upload input[type="file"] {
@@ -51,15 +68,21 @@
 .decrypt-upload strong {
     display: block;
     margin-bottom: 12px;
+    color: var(--primary);
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .decrypt-upload .help-text {
     margin: 0;
+    color: var(--muted);
+    font-size: 13px;
 }
 
 .decrypt-upload:hover {
-    background: #eef9fb;
-    border-color: #008b9b;
+    background: rgba(0, 229, 255, 0.05);
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
 }
 
 .decrypt-preview {
@@ -67,83 +90,154 @@
     max-width: 100%;
     max-height: 220px;
     object-fit: contain;
-    margin: 15px auto;
+    margin: 20px auto;
     border-radius: 8px;
+    border: 1px solid var(--border);
 }
 
 .decrypt-field {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #cbdce3;
-    border-radius: 7px;
-    margin: 8px 0 16px;
+    padding: 14px;
+    background: var(--navy-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 8px 0 20px;
     box-sizing: border-box;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.decrypt-field:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+}
+
+label {
+    color: var(--muted);
+    font-size: 13px;
+    display: block;
+    margin-bottom: 6px;
 }
 
 .decrypt-button {
     width: 100%;
-    padding: 13px;
+    padding: 15px;
     border: 0;
     border-radius: 8px;
-    background: linear-gradient(90deg,#00cba5,#29c9dc);
-    font-weight: bold;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.decrypt-button:hover:not(:disabled) {
+    box-shadow: 0 0 20px rgba(181, 0, 255, 0.5);
+    transform: translateY(-2px);
 }
 
 .decrypt-button:disabled {
-    opacity: .5;
+    opacity: 0.4;
     cursor: not-allowed;
+    filter: grayscale(1);
 }
 
 .decrypt-result {
     display: none;
-    margin-top: 25px;
+    margin-top: 35px;
+    border-color: rgba(181, 0, 255, 0.4);
+    box-shadow: 0 0 30px rgba(181, 0, 255, 0.15);
 }
 
 .decrypt-result textarea {
     width: 100%;
     min-height: 160px;
     resize: vertical;
-    padding: 14px;
-    border: 1px solid #cbdce3;
+    padding: 16px;
+    background: var(--navy-light);
+    border: 1px solid var(--border);
     border-radius: 8px;
     box-sizing: border-box;
+    color: var(--text);
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.decrypt-result textarea:focus {
+    outline: none;
+    border-color: var(--primary);
 }
 
 .decrypt-actions {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-top: 15px;
+    gap: 15px;
+    margin-top: 20px;
 }
 
 .decrypt-actions button {
-    padding: 10px 24px;
-    border: 0;
-    border-radius: 7px;
+    padding: 12px 28px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--navy-light);
+    color: var(--primary);
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s;
+}
+
+.decrypt-actions button:hover:not(:disabled) {
+    background: var(--primary);
+    color: var(--bg-main);
+    box-shadow: var(--glow);
+}
+
+.decrypt-actions button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .decrypt-status {
-    margin-top: 12px;
+    margin-top: 15px;
     text-align: center;
-    color: #008b9b;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .decrypt-hidden {
-    display: none;
+    display: none !important;
+}
+
+#payloadInformation {
+    color: var(--muted);
+    margin-bottom: 25px;
+    font-size: 14px;
+    background: rgba(0, 229, 255, 0.05);
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 229, 255, 0.1);
 }
 
 @media(max-width:700px) {
     .decrypt-grid {
         grid-template-columns: 1fr;
     }
+    .decrypt-card {
+        padding: 20px;
+    }
 }
 </style>
 
 <section class="decrypt-section">
 
-    <h2 style="text-align:center;margin-bottom:30px;">
+    <h2 style="text-align:center;">
         Decrypt Your Hidden Data
     </h2>
 
@@ -183,7 +277,7 @@
                      alt="Encrypted image preview">
 
                 <p id="selectedImageName"
-                   style="text-align:center;"></p>
+                   style="text-align:center; color: var(--muted); font-size: 13px; margin-top: 15px;"></p>
                 <p id="decryptStatus"
                     class="decrypt-status"
                     aria-live="polite"></p>
@@ -267,7 +361,7 @@
              class="decrypt-hidden">
 
             <p id="decryptedFilename"
-               style="text-align:center;"></p>
+               style="text-align:center; color: var(--primary); font-weight: 600; margin-bottom: 15px;"></p>
 
             <div class="decrypt-actions">
 
@@ -391,7 +485,7 @@
         }
 
         previewObjectUrl = URL.createObjectURL(selectedFile);
-preview.src = previewObjectUrl;
+        preview.src = previewObjectUrl;
         preview.style.display = "block";
 
         imageName.textContent = selectedFile.name;

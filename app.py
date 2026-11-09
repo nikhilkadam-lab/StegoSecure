@@ -102,6 +102,12 @@ def load_encrypted_png(uploaded):
         return image.convert("RGB")
 
 
+@app.route('/SteogSecure_logo.png')
+def serve_logo():
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'SteogSecure_logo.png')
+
+
+
 @app.route("/")
 def home():
     remaining_credits = None
@@ -645,7 +651,7 @@ def site_banner():
     # Default banner when no admin banner exists.
     return send_from_directory(
         str(BASE_DIR),
-        "StegoSecure Banner.png",
+        "StegoSecure-default-Banner.png",
     )
 
 

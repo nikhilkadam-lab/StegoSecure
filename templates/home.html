@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}StegoSecure | Encryption{% endblock %}
@@ -7,8 +6,9 @@
 
 .banner {
     width: 100%;
-    background: #071a2b;
+    background: var(--bg-main);
     overflow: hidden;
+    border-bottom: 1px solid var(--border);
 }
 
 .banner img {
@@ -19,14 +19,14 @@
 
 .encryption-section {
     max-width: 1350px;
-    margin: 26px auto 45px;
+    margin: 40px auto 60px;
     padding: 0 25px;
 }
 
 .encryption-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 22px 38px;
+    gap: 24px 30px;
 }
 
 /* CARDS */
@@ -34,34 +34,54 @@
 .encryption-card {
     min-width: 0;
     min-height: 210px;
-    padding: 15px;
-    border: 1px solid #c9dfe5;
-    border-radius: 12px;
-    background: #ffffff;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    box-shadow: 0 4px 15px #092a3b08;
-    transition: transform .2s, box-shadow .2s, border-color .2s;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.encryption-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
 .encryption-card:hover {
-    border-color: #00bfa5;
-    box-shadow: 0 9px 25px #092a3b12;
+    border-color: rgba(0, 229, 255, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 229, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.encryption-card:hover::before {
+    opacity: 1;
 }
 
 .encryption-card h3 {
     min-height: 27px;
-    margin: 0 0 12px;
+    margin: 0 0 15px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: #087f8c;
+    color: var(--primary);
     font-size: 17px;
     line-height: 1.3;
     text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 /* FORM CONTROLS */
@@ -69,27 +89,33 @@
 .field-label {
     display: block;
     font-size: 13px;
-    font-weight: 600;
-    color: #344b5b;
-    margin: 8px 0 6px;
+    font-weight: 500;
+    color: var(--muted);
+    margin: 8px 0 8px;
 }
 
 .form-control {
     width: 100%;
     min-width: 0;
-    padding: 10px 11px;
-    border: 1px solid #cbd9e2;
-    border-radius: 7px;
-    background: #fff;
-    color: #203647;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--navy-light);
+    color: var(--text);
     font-family: inherit;
     font-size: 13px;
+    transition: all 0.2s;
 }
 
 .form-control:focus {
     outline: none;
-    border-color: #00a994;
-    box-shadow: 0 0 0 3px #00bfa51c;
+    border-color: var(--primary);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+}
+
+.form-control:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 textarea.form-control {
@@ -104,27 +130,27 @@ textarea.form-control {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 8px;
     width: 100%;
     min-width: 0;
     min-height: 90px;
-    padding: 12px;
+    padding: 16px;
     text-align: center;
-    border: 2px dashed #a9cbd1;
-    border-radius: 9px;
-    background: #f5fbfc;
+    border: 2px dashed rgba(0, 229, 255, 0.4);
+    border-radius: 10px;
+    background: rgba(0, 229, 255, 0.02);
     cursor: pointer;
-    color: #087f8c;
+    color: var(--primary);
     font-size: 13px;
     line-height: 1.5;
     overflow: hidden;
     overflow-wrap: anywhere;
-    transition: .2s;
+    transition: all 0.2s;
 }
 
 .upload-area:hover {
-    border-color: #00bfa5;
-    background: #edfaf8;
+    border-color: var(--primary);
+    background: rgba(0, 229, 255, 0.05);
 }
 
 .upload-area input {
@@ -133,6 +159,7 @@ textarea.form-control {
 
 .upload-area .help-text {
     margin: 0;
+    color: var(--muted);
 }
 
 /* COVER IMAGE PREVIEW */
@@ -154,8 +181,8 @@ textarea.form-control {
 
 .cover-upload-area.has-preview {
     border-style: solid;
-    border-color: #b7dce0;
-    background: #f7fbfc;
+    border-color: var(--primary);
+    background: var(--navy-light);
 }
 
 .cover-upload-area.has-preview .cover-upload-prompt {
@@ -184,7 +211,7 @@ textarea.form-control {
     width: 100%;
     min-height: 100px;
     margin: 0;
-    padding: 12px;
+    padding: 16px;
 }
 
 /* SELECTED FILE PREVIEW */
@@ -193,10 +220,10 @@ textarea.form-control {
     display: none;
     width: 100%;
     min-width: 0;
-    padding: 10px;
-    border: 1px solid #d5e7e9;
+    padding: 12px;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: #f6fbfb;
+    background: var(--navy-light);
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -225,7 +252,7 @@ textarea.form-control {
 
 .file-preview-name {
     width: 100%;
-    color: #087f8c;
+    color: var(--primary);
     font-size: 12px;
     font-weight: 600;
     overflow-wrap: anywhere;
@@ -233,13 +260,13 @@ textarea.form-control {
 }
 
 .file-preview-size {
-    color: #718096;
+    color: var(--muted);
     font-size: 11px;
 }
 
 .file-name {
-    margin-top: 7px;
-    color: #526b7a;
+    margin-top: 10px;
+    color: var(--muted);
     font-size: 12px;
     overflow-wrap: anywhere;
     word-break: break-word;
@@ -262,59 +289,63 @@ textarea.form-control {
 
 .capacity-box {
     margin-top: 10px;
-    padding: 12px 10px;
+    padding: 15px 12px;
     border-radius: 8px;
-    background: #edf8f7;
+    background: rgba(0, 229, 255, 0.05);
+    border: 1px solid rgba(0, 229, 255, 0.1);
     text-align: center;
 }
 
 .capacity-box strong {
     display: block;
-    color: #087f8c;
-    font-size: 25px;
+    color: var(--primary);
+    font-size: 26px;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
 }
 
 .capacity-box small {
-    color: #64748b;
+    color: var(--muted);
     font-size: 11px;
 }
 
 /* ENCRYPTION CREDITS */
 
 .credit-box {
-    margin-bottom: 14px;
-    padding: 12px;
-    border: 1px solid #c9e9e4;
-    border-radius: 9px;
-    background: #f0faf8;
+    margin-bottom: 18px;
+    padding: 15px;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(0, 229, 255, 0.05);
     text-align: center;
 }
 
 .credit-box strong {
     display: block;
-    color: #087f8c;
-    font-size: 25px;
-    margin: 3px 0;
+    color: var(--primary);
+    font-size: 26px;
+    margin: 5px 0;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
 }
 
 .credit-box small {
-    color: #64748b;
+    color: var(--muted);
     font-size: 11px;
 }
 
 .credit-box.exhausted {
-    border-color: #f0caca;
-    background: #fff5f5;
+    border-color: rgba(181, 0, 255, 0.3);
+    background: rgba(181, 0, 255, 0.05);
 }
 
 .credit-box.exhausted strong {
-    color: #c0392b;
+    color: var(--secondary);
+    text-shadow: 0 0 10px rgba(181, 0, 255, 0.3);
 }
 
 /* HELP TEXT */
 
 .help-text {
-    color: #718096;
+    color: var(--muted);
     font-size: 11px;
     line-height: 1.5;
     margin-top: 7px;
@@ -327,14 +358,20 @@ textarea.form-control {
     flex-wrap: wrap;
     gap: 18px;
     justify-content: center;
-    margin: 4px 0 10px;
+    margin: 4px 0 15px;
     font-size: 13px;
+    color: var(--text);
 }
 
 .radio-options label {
     display: flex;
     gap: 6px;
     align-items: center;
+    cursor: pointer;
+}
+
+.radio-options input[type="radio"] {
+    accent-color: var(--primary);
     cursor: pointer;
 }
 
@@ -355,59 +392,66 @@ textarea.form-control {
 }
 
 .secondary-button {
-    border: 0;
-    padding: 10px 12px;
-    border-radius: 7px;
-    color: white;
-    background: #087f8c;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    border-radius: 8px;
+    color: var(--primary);
+    background: var(--navy-light);
     cursor: pointer;
     font-size: 12px;
+    font-weight: 600;
     white-space: nowrap;
+    transition: all 0.2s;
 }
 
 .secondary-button:hover {
-    background: #066b76;
+    background: var(--primary);
+    color: var(--bg-main);
+    box-shadow: var(--glow);
 }
 
 /* ENCRYPT BUTTON */
 
 .primary-button {
     width: 100%;
-    padding: 14px;
+    padding: 15px;
     border: 0;
     border-radius: 8px;
-    color: #06202a;
-    background: linear-gradient(135deg, #00d2ad, #36d5e8);
+    color: #fff;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
     font-size: 16px;
-    font-weight: 750;
+    font-weight: 700;
     cursor: pointer;
-    transition: .2s;
+    transition: all 0.3s ease;
 }
 
 .primary-button:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px #00bfa538;
+    box-shadow: 0 0 25px rgba(181, 0, 255, 0.5);
 }
 
 .primary-button:disabled {
-    opacity: .5;
+    opacity: 0.4;
     cursor: not-allowed;
+    filter: grayscale(1);
 }
 
 /* STATUS */
 
 .status-message {
     font-size: 12px;
-    margin-top: 8px;
+    margin-top: 10px;
     line-height: 1.5;
 }
 
 .status-error {
-    color: #c0392b;
+    color: #FF4B4B;
+    text-shadow: 0 0 5px rgba(255, 75, 75, 0.3);
 }
 
 .status-success {
-    color: #16835d;
+    color: #00FF88;
+    text-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
 }
 
 /* RESPONSIVE */
@@ -415,7 +459,7 @@ textarea.form-control {
 @media(max-width: 850px) {
     .encryption-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 18px;
+        gap: 20px;
     }
 }
 
@@ -443,10 +487,19 @@ textarea.form-control {
     }
 }
 
+#encryption {
+    scroll-margin-top: 72px;
+}
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 20px; 
+        }
 {% endblock %}
 
 
 {% block content %}
+
 
 <section class="banner">
     <img
@@ -827,7 +880,7 @@ textarea.form-control {
                 {% endif %}
 
                 <p class="help-text"
-                   style="text-align:center;margin-bottom:16px;">
+                   style="text-align:center;margin-bottom:20px;">
                     Review your selected image and secret data before
                     starting encryption.
                 </p>
@@ -844,7 +897,7 @@ textarea.form-control {
                     {% for message in encryption_errors %}
                         <div class="status-message status-error"
                             role="alert"
-                            style="margin-top: 12px; text-align: center;">
+                            style="margin-top: 15px; text-align: center;">
                             {{ message }}
                         </div>
                     {% endfor %}
