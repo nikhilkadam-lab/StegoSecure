@@ -1,0 +1,883 @@
+
+{% extends "base.html" %}
+
+{% block title %}My Profile | StegoSecure{% endblock %}
+
+{% block extra_css %}
+.profile-page {
+    width: calc(100% - 32px);
+    max-width: 1090px;
+    margin: 27px auto 48px;
+}
+
+.profile-heading {
+    margin-bottom: 24px;
+}
+
+.profile-heading h1 {
+    margin: 0 0 6px;
+    color: #071a2b;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.profile-heading p {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* TOP TABS */
+.profile-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #d8e7eb;
+    margin-bottom: 20px;
+}
+
+.profile-tab {
+    min-width: 157px;
+    padding: 12px 20px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    background: transparent;
+    color: #64748b;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.profile-tab:hover {
+    color: #087f8c;
+}
+
+.profile-tab.active {
+    color: #087f8c;
+    border-bottom-color: #00c9a7;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* MAIN CARD */
+.profile-card {
+    padding: 23px;
+    background: #fff;
+    border: 1px solid #d8e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(7, 26, 43, .04);
+}
+
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.detail-item {
+    min-width: 0;
+    padding: 16px;
+    background: #f3f8fa;
+    border: 1px solid #e8f0f3;
+    border-radius: 9px;
+}
+
+.detail-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.detail-value {
+    display: block;
+    color: #071a2b;
+    font-size: 15px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.credits-value {
+    color: #087f8c;
+}
+
+/* ACTION BUTTONS */
+.profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.action-button {
+    padding: 11px 17px;
+    border: 1px solid #e2ebef;
+    border-radius: 8px;
+    background: #eaf1f4;
+    color: #071a2b;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.action-button:hover,
+.action-button.active {
+    background: #087f8c;
+    border-color: #087f8c;
+    color: white;
+}
+
+/* ACTION PANELS */
+.action-panel {
+    display: none;
+    margin-top: 17px;
+    padding: 20px;
+    border: 1px solid #d8e7eb;
+    border-radius: 10px;
+    background: #fbfdfe;
+}
+
+.action-panel.active {
+    display: block;
+}
+
+.action-panel h2 {
+    margin: 0 0 17px;
+    color: #071a2b;
+    font-size: 17px;
+}
+
+/* FORMS */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #203647;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    max-width: 460px;
+    padding: 11px 13px;
+    border: 1px solid #d8e7eb;
+    border-radius: 8px;
+    background: white;
+    color: #203647;
+    font: inherit;
+    font-size: 14px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #087f8c;
+    box-shadow: 0 0 0 3px rgba(8,127,140,.12);
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.primary-button,
+.cancel-button {
+    padding: 11px 18px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.primary-button {
+    border: 1px solid #087f8c;
+    background: #087f8c;
+    color: white;
+}
+
+.primary-button:hover {
+    background: #066873;
+}
+
+.cancel-button {
+    border: 1px solid #d8e7eb;
+    background: #eaf1f4;
+    color: #071a2b;
+}
+
+/* FORGOT PASSWORD */
+.coming-soon-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.coming-soon-heading h2 {
+    margin: 0;
+}
+
+.coming-soon-label {
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: #fff2d8;
+    color: #9a6100;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.coming-soon p {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* PURCHASE HISTORY */
+.history-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.history-table th {
+    padding: 13px 14px;
+    background: #f3f8fa;
+    color: #64748b;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.history-table td {
+    padding: 14px;
+    border-bottom: 1px solid #e8eff2;
+    color: #203647;
+    white-space: nowrap;
+}
+
+.history-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.payment-status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.status-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-failed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-other {
+    background: #eaf0f4;
+    color: #475569;
+}
+
+.empty-history {
+    padding: 24px 12px;
+    border-radius: 8px;
+    background: #f8fbfc;
+    color: #64748b;
+    text-align: center;
+    font-size: 14px;
+}
+
+@media (max-width: 650px) {
+    .profile-page {
+        width: calc(100% - 24px);
+        margin-top: 22px;
+    }
+
+    .profile-card {
+        padding: 16px;
+    }
+
+    .account-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .profile-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .action-button {
+        text-align: left;
+    }
+
+    .profile-tab {
+        min-width: 0;
+        flex: 1;
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+
+    .history-table {
+        min-width: 570px;
+    }
+
+    .form-group input {
+        max-width: 100%;
+    }
+}
+
+/* LIVE PASSWORD VALIDATION */
+.password-requirements {
+    max-width: 460px;
+    margin: 10px 0 16px;
+    padding: 12px 15px;
+    background: #f3f8fa;
+    border: 1px solid #e2ebef;
+    border-radius: 8px;
+}
+
+.password-requirements p {
+    margin: 0 0 8px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.password-requirements ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.password-requirements li {
+    margin: 5px 0;
+    color: #dc2626;
+    font-size: 12px;
+}
+
+.password-requirements li.valid {
+    color: #15803d;
+}
+
+.password-requirements li::before {
+    content: "✕ ";
+    font-weight: 700;
+}
+
+.password-requirements li.valid::before {
+    content: "✓ ";
+}
+
+.password-feedback {
+    display: block;
+    margin-top: 7px;
+    font-size: 12px;
+}
+
+.password-feedback.valid {
+    color: #15803d;
+}
+
+.password-feedback.invalid {
+    color: #dc2626;
+}
+
+@media (max-width: 650px) {
+    .password-requirements {
+        max-width: 100%;
+    }
+}
+
+.payment-id-cell {
+    font-size: 12px;
+    color: #64748b;
+    overflow-wrap: anywhere;
+    min-width: 150px;
+}
+{% endblock %}
+
+
+{% block content %}
+<div class="profile-page">
+
+    <div class="profile-heading">
+        <h1>My Profile</h1>
+        <p>Manage your account and view your purchase history.</p>
+    </div>
+
+    <!-- MAIN TABS -->
+    <div class="profile-tabs" role="tablist">
+        <button type="button"
+                class="profile-tab active"
+                data-tab="account-tab"
+                role="tab"
+                aria-selected="true">
+            Account Details
+        </button>
+
+        <button type="button"
+                class="profile-tab"
+                data-tab="history-tab"
+                role="tab"
+                aria-selected="false">
+            Purchase History
+        </button>
+    </div>
+
+    <!-- ACCOUNT DETAILS TAB -->
+    <section id="account-tab" class="tab-panel active">
+
+        <div class="profile-card">
+
+            <div class="account-grid">
+
+                <div class="detail-item">
+                    <span class="detail-label">Username</span>
+                    <span class="detail-value">{{ user.username }}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Email Address</span>
+                    <span class="detail-value">{{ user.email }}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Available Credits</span>
+                    <span class="detail-value credits-value">
+                        {{ remaining_credits if remaining_credits is not none else '—' }}
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Account Created</span>
+                    <span class="detail-value">
+                        {{ user.created_at.strftime('%d %b %Y') if user.created_at else 'N/A' }}
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="profile-actions">
+
+                <button type="button"
+                        class="action-button"
+                        data-panel="username-panel">
+                    Change Username
+                </button>
+
+                <button type="button"
+                        class="action-button"
+                        data-panel="password-panel">
+                    Change Password
+                </button>
+
+                <button type="button"
+                        class="action-button"
+                        data-panel="forgot-panel">
+                    Forgot Password
+                </button>
+
+            </div>
+
+            <!-- CHANGE USERNAME -->
+            <section id="username-panel" class="action-panel">
+
+                <h2>Change Username</h2>
+
+                <form method="POST"
+                      action="{{ url_for('auth.change_username') }}">
+
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="{{ csrf_token() }}">
+
+                    <div class="form-group">
+                        <label for="new_username">New Username</label>
+                        <input type="text"
+                               id="new_username"
+                               name="new_username"
+                               value="{{ user.username }}"
+                               minlength="2"
+                               maxlength="50"
+                               autocomplete="username"
+                               required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button">
+                            Save Changes
+                        </button>
+
+                        <button type="button"
+                                class="cancel-button"
+                                data-cancel>
+                            Cancel
+                        </button>
+                    </div>
+
+                </form>
+            </section>
+
+            <!-- CHANGE PASSWORD -->
+            <section id="password-panel" class="action-panel">
+
+                <h2>Change Password</h2>
+
+                <form method="POST"
+                      action="{{ url_for('auth.change_password') }}">
+
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="{{ csrf_token() }}">
+
+                    <div class="form-group">
+                        <label for="current_password">Old Password</label>
+                        <input type="password"
+                               id="current_password"
+                               name="current_password"
+                               autocomplete="current-password"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input type="password"
+                               id="new_password"
+                               name="new_password"
+                               autocomplete="new-password"
+                               minlength="8"
+                               maxlength="128"
+                               required>
+                    </div>
+                    <div class="password-requirements">
+                        <p>Your password must contain:</p>
+                        <ul>
+                            <li id="rule-length">At least 8 characters</li>
+                            <li id="rule-uppercase">At least one uppercase letter</li>
+                            <li id="rule-number">At least one number</li>
+                            <li id="rule-special">At least one special character</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_new_password">
+                            Confirm New Password
+                        </label>
+                        <input type="password"
+                               id="confirm_new_password"
+                               name="confirm_new_password"
+                               autocomplete="new-password"
+                               minlength="8"
+                               maxlength="128"
+                               required>
+                    </div>
+                    <span id="password-match-feedback" class="password-feedback"></span>
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button">
+                            Update Password
+                        </button>
+
+                        <button type="button"
+                                class="cancel-button"
+                                data-cancel>
+                            Cancel
+                        </button>
+                    </div>
+
+                </form>
+            </section>
+
+            <!-- FORGOT PASSWORD -->
+            <section id="forgot-panel" class="action-panel">
+
+                <div class="coming-soon">
+                    <div class="coming-soon-heading">
+                        <h2>Forgot Password?</h2>
+                        <span class="coming-soon-label">Coming Soon</span>
+                    </div>
+
+                    <p>
+                        Reset your password securely using your registered
+                        email address.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="registered_email">Registered Email</label>
+                        <input type="email"
+                               id="registered_email"
+                               value="{{ user.email }}"
+                               readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email_otp">Email OTP</label>
+                        <input type="text"
+                               id="email_otp"
+                               placeholder="OTP verification Coming Soon"
+                               disabled>
+                    </div>
+
+                    <button type="button"
+                            class="primary-button"
+                            disabled
+                            style="opacity:.55; cursor:not-allowed;">
+                        Verify OTP
+                    </button>
+
+                    <p>
+                        After OTP verification, you will be able to enter
+                        and confirm your new password.
+                    </p>
+                </div>
+
+            </section>
+
+        </div>
+    </section>
+
+    <!-- PURCHASE HISTORY TAB -->
+    <section id="history-tab" class="tab-panel">
+
+        <div class="profile-card">
+            <h2>Purchase History</h2>
+
+            {% if payment_history %}
+            <div class="history-table-wrapper">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Payment ID</th>
+                            <th>Plan</th>
+                            <th>Credits</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for payment in payment_history %}
+                        {% set status = (payment.status or 'unknown')|lower %}
+
+                        <tr>
+                            <td>
+                                {{ payment.created_at.strftime('%d %b %Y') if payment.created_at else '—' }}
+                            </td>
+                            <td class="payment-id-cell">
+                                    {{ payment.payment_id or '—' }}
+                                </td>
+
+                            <td>{{ payment.plan_name or 'Credit Plan' }}</td>
+
+                            <td>
+                                {{ payment.credits if payment.credits is not none else '—' }}
+                            </td>
+
+                            <td>
+                                ₹{{ "%.2f"|format(payment.amount|float) }}
+                            </td>
+
+                            <td>
+                                <span class="payment-status
+                                    {% if status in ['success', 'paid', 'captured'] %}status-success
+                                    {% elif status == 'pending' %}status-pending
+                                    {% elif status in ['failed', 'failure'] %}status-failed
+                                    {% else %}status-other{% endif %}">
+                                    {{ payment.status or 'Unknown' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-history">
+                No purchase history available yet.
+            </div>
+            {% endif %}
+        </div>
+
+    </section>
+
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const tabButtons = document.querySelectorAll(".profile-tab");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+    const actionButtons = document.querySelectorAll(".action-button");
+    const actionPanels = document.querySelectorAll(".action-panel");
+
+    function showTab(tabId) {
+        tabButtons.forEach(function (button) {
+            const selected = button.dataset.tab === tabId;
+            button.classList.toggle("active", selected);
+            button.setAttribute("aria-selected", selected ? "true" : "false");
+        });
+
+        tabPanels.forEach(function (panel) {
+            panel.classList.toggle("active", panel.id === tabId);
+        });
+    }
+
+    function showAction(panelId) {
+        actionButtons.forEach(function (button) {
+            button.classList.toggle(
+                "active",
+                button.dataset.panel === panelId
+            );
+        });
+
+        actionPanels.forEach(function (panel) {
+            panel.classList.toggle("active", panel.id === panelId);
+        });
+    }
+
+    tabButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            showTab(button.dataset.tab);
+        });
+    });
+
+    actionButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            showAction(button.dataset.panel);
+        });
+    });
+
+    document.querySelectorAll("[data-cancel]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            showAction(null);
+        });
+    });
+
+    // Keep the password panel open after a password submission.
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("panel") === "password") {
+        showTab("account-tab");
+        showAction("password-panel");
+    }
+
+    // LIVE NEW PASSWORD VALIDATION
+    const newPassword = document.getElementById("new_password");
+    const confirmPassword = document.getElementById("confirm_new_password");
+    const passwordForm = document.querySelector(
+        '#password-panel form'
+    );
+
+    const rules = {
+        length: document.getElementById("rule-length"),
+        uppercase: document.getElementById("rule-uppercase"),
+        number: document.getElementById("rule-number"),
+        special: document.getElementById("rule-special")
+    };
+
+    const matchFeedback = document.getElementById(
+        "password-match-feedback"
+    );
+
+    function validateNewPassword() {
+        const value = newPassword.value;
+
+        const checks = {
+            length: value.length >= 8 && value.length <= 128,
+            uppercase: /[A-Z]/.test(value),
+            number: /[0-9]/.test(value),
+            special: /[^A-Za-z0-9]/.test(value)
+        };
+
+        Object.keys(checks).forEach(function (key) {
+            rules[key].classList.toggle("valid", checks[key]);
+        });
+
+        return Object.values(checks).every(Boolean);
+    }
+
+    function validatePasswordMatch() {
+        const newValue = newPassword.value;
+        const confirmValue = confirmPassword.value;
+
+        if (!confirmValue) {
+            matchFeedback.textContent = "";
+            matchFeedback.className = "password-feedback";
+            return false;
+        }
+
+        const matches = newValue === confirmValue;
+
+        matchFeedback.textContent = matches
+            ? "Passwords match."
+            : "Passwords do not match.";
+
+        matchFeedback.className = matches
+            ? "password-feedback valid"
+            : "password-feedback invalid";
+
+        return matches;
+    }
+
+    newPassword.addEventListener("input", function () {
+        validateNewPassword();
+
+        if (confirmPassword.value) {
+            validatePasswordMatch();
+        }
+    });
+
+    confirmPassword.addEventListener("input", validatePasswordMatch);
+
+    passwordForm.addEventListener("submit", function (event) {
+        const passwordValid = validateNewPassword();
+        const passwordsMatch = validatePasswordMatch();
+
+        if (!passwordValid || !passwordsMatch) {
+            event.preventDefault();
+
+            if (!passwordValid) {
+                newPassword.focus();
+            } else {
+                confirmPassword.focus();
+            }
+        }
+    });
+
+});
+</script>
+{% endblock %}

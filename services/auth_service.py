@@ -148,3 +148,159 @@ def authenticate_user(email, password):
             cursor.close()
         if connection and connection.is_connected():
             connection.close()
+
+
+def get_user_profile(user_id):
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT id, username, email, created_at
+            FROM users
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (user_id,),
+        )
+
+        return cursor.fetchone()
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+def update_username(user_id, new_username):
+    new_username = validate_username(new_username)
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            "SELECT id FROM users WHERE id = %s LIMIT 1",
+            (user_id,),
+        )
+
+        if not cursor.fetchone():
+            raise ValueError("User account not found.")
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET username = %s
+            WHERE id = %s
+            """,
+            (new_username, user_id),
+        )
+
+        connection.commit()
+
+        return new_username
+
+    except mysql.connector.IntegrityError:
+        if connection:
+            connection.rollback()
+        raise ValueError("That username is already taken.")
+
+    except Exception:
+        if connection:
+            connection.rollback()
+        raise
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+def verify_current_password(user_id, current_password):
+    if not isinstance(current_password, str) or not current_password:
+        return False
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT password_hash
+            FROM users
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (user_id,),
+        )
+
+        user = cursor.fetchone()
+
+        if not user:
+            return False
+
+        try:
+            return password_hasher.verify(
+                user["password_hash"],
+                current_password,
+            )
+        except (
+            VerifyMismatchError,
+            VerificationError,
+            InvalidHashError,
+        ):
+            return False
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()
+
+
+def update_user_password(user_id, new_password):
+    validate_password(new_password)
+
+    password_hash = password_hasher.hash(new_password)
+
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET password_hash = %s
+            WHERE id = %s
+            """,
+            (password_hash, user_id),
+        )
+
+        if cursor.rowcount == 0:
+            raise ValueError("User account not found.")
+
+        connection.commit()
+
+    except Exception:
+        if connection:
+            connection.rollback()
+        raise
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()

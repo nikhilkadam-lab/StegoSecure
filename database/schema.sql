@@ -84,6 +84,9 @@ CREATE TABLE payments (
     amount DECIMAL(10,2) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    plan_name_snapshot VARCHAR(50) NULL,
+    credits_snapshot INT UNSIGNED NULL,
+
     UNIQUE KEY uq_payments_payment_id (payment_id),
     UNIQUE KEY uq_payments_order_id (razorpay_order_id),
     KEY idx_payments_user_date (user_id, created_at),

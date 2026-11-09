@@ -8,8 +8,16 @@ from flask import (
     flash,
     current_app
 )
-from services.auth_service import register_user, authenticate_user
+from services.auth_service import (
+    register_user,
+    authenticate_user,
+    get_user_profile,
+    update_username,
+    verify_current_password,
+    update_user_password,
+)
 from services.credit_service import get_remaining_credits
+from services.payment_service import get_user_payment_history
 from email_validator import validate_email, EmailNotValidError
 
 auth_bp = Blueprint("auth", __name__)
@@ -124,6 +132,7 @@ def dashboard():
 
     try:
         remaining_credits = get_remaining_credits(session["user_id"])
+    
     except Exception:
         current_app.logger.exception(
             "Unable to retrieve encryption credits for user_id=%s",
@@ -136,6 +145,100 @@ def dashboard():
         banner_url=url_for("site_banner"),
         remaining_credits=remaining_credits,
     )
+
+
+@auth_bp.route("/profile")
+def profile():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    try:
+        user = get_user_profile(session["user_id"])
+
+        if not user:
+            session.clear()
+            flash("Your account could not be found. Please log in again.", "error")
+            return redirect(url_for("auth.login"))
+
+        remaining_credits = get_remaining_credits(session["user_id"])
+        payment_history = get_user_payment_history(session["user_id"])
+
+        return render_template(
+            "profile.html",
+            user=user,
+            remaining_credits=remaining_credits,
+            payment_history=payment_history,
+        )
+
+    except Exception:
+        current_app.logger.exception("Unable to load user profile")
+        flash("Unable to load your profile. Please try again.", "error")
+        return redirect(url_for("auth.dashboard"))
+
+@auth_bp.route("/profile/username", methods=["POST"])
+def change_username():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    new_username = request.form.get("new_username", "").strip()
+
+    try:
+        updated_username = update_username(
+            session["user_id"],
+            new_username,
+        )
+
+        session["username"] = updated_username
+
+        flash("Username updated successfully.", "success")
+
+    except ValueError as exc:
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception("Username update failed")
+        flash("Unable to update username. Please try again.", "error")
+
+    return redirect(url_for("auth.profile"))
+
+@auth_bp.route("/profile/password", methods=["POST"])
+def change_password():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    current_password = request.form.get("current_password", "")
+    new_password = request.form.get("new_password", "")
+    confirm_new_password = request.form.get("confirm_new_password", "")
+
+    try:
+        if not verify_current_password(
+            session["user_id"],
+            current_password,
+        ):
+            raise ValueError("Your current password is incorrect.")
+
+        if not confirm_new_password:
+            raise ValueError("Please confirm your new password.")
+
+        if new_password != confirm_new_password:
+            raise ValueError("New passwords do not match.")
+
+        update_user_password(
+            session["user_id"],
+            new_password,
+        )
+
+        flash("Password updated successfully.", "success")
+
+    except ValueError as exc:
+        flash(str(exc), "error")
+
+    except Exception:
+        current_app.logger.exception("Password update failed")
+        flash("Unable to update password. Please try again.", "error")
+
+    return redirect(url_for("auth.profile", panel="password"))
+
 
 
 @auth_bp.route("/logout", methods=["POST"])

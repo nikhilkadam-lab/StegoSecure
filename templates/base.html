@@ -111,6 +111,30 @@
         }
 
         .profile-trigger {
+    list-style: none;
+}
+
+.profile-trigger::-webkit-details-marker {
+    display: none;
+}
+
+.profile-menu:hover .profile-dropdown {
+    display: block;
+}
+
+.profile-chevron {
+    font-size: 17px;
+    margin-left: 2px;
+}
+
+.profile-dropdown a,
+.profile-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+        .profile-trigger {
             display: flex;
             align-items: center;
             gap: 9px;
@@ -283,6 +307,28 @@
             }
         }
 
+        .nav-links > a:hover {
+    color: var(--teal);
+}
+.nav-logout {
+    margin: 0;
+}
+
+.nav-logout button {
+    background: transparent;
+    border: none;
+    color: #dce9f1;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
+
+.nav-logout button:hover {
+    color: var(--teal);
+}
+
         {% block extra_css %}{% endblock %}
     </style>
 </head>
@@ -311,46 +357,48 @@
     Buy Credits
 </a>
 
-                <details class="profile-menu">
 
-                    <summary class="profile-trigger">
-                        <span class="profile-icon">👤</span>
-                        <span class="profile-name">
-                            {{ session.get('username', 'My Account') }}
-                        </span>
-                        <span>⌄</span>
-                    </summary>
 
-                    <div class="profile-dropdown">
+            <details class="profile-menu">
+                <summary class="profile-trigger">
+                    <span class="profile-icon">
+                        <svg viewBox="0 0 24 24" width="19" height="19"
+                            fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M5 21v-2a7 7 0 0 1 14 0v2"/>
+                        </svg>
+                    </span>
 
-                        <a href="{{ url_for('auth.dashboard') }}">
-                            My Dashboard
-                        </a>
+                    <span class="profile-name">
+                        {{ session.get('username', 'Account') }}
+                    </span>
 
-                        <a href="{{ url_for('home') }}#encryption">
-                            Encrypt Data
-                        </a>
+                    <span class="profile-chevron">⌄</span>
+                </summary>
 
-                        <a href="{{ url_for('decryption_page') }}">
-                            Decrypt Data
-                        </a>
+                <div class="profile-dropdown">
 
-                        <form method="post"
-                              action="{{ url_for('auth.logout') }}">
+                    <a href="{{ url_for('auth.profile') }}">
+                        <span>👤</span> My Account
+                    </a>
 
-                            <input type="hidden"
-                                   name="csrf_token"
-                                   value="{{ csrf_token() }}">
+                    <form method="POST"
+                        action="{{ url_for('auth.logout') }}">
 
-                            <button type="submit">
-                                Logout
-                            </button>
+                        <input type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}">
 
-                        </form>
+                        <button type="submit">
+                            <span>↪</span> Logout
+                        </button>
+                    </form>
 
-                    </div>
+                </div>
+            </details>
 
-                </details>
 
             {% else %}
 

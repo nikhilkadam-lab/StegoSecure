@@ -273,3 +273,37 @@ def verify_and_credit_payment(
 
         if connection and connection.is_connected():
             connection.close()
+
+
+def get_user_payment_history(user_id):
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                COALESCE(plan_name_snapshot, 'Credit Plan') AS plan_name,
+                credits_snapshot AS credits,
+                amount,
+                status,
+                created_at,
+                payment_id
+            FROM payments
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            """,
+            (user_id,),
+        )
+
+        return cursor.fetchall()
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.is_connected():
+            connection.close()

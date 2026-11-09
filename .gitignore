@@ -9,3 +9,5 @@ uploads/*
 __pycache__/
 *.py[cod]
 .pytest_cache/
+# Private user uploads and generated files
+private_storage/
