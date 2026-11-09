@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard | StegoSecure{% endblock %}
+
+{% block page_heading %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="card">
+
+    <h2 style="margin-top:0;">Welcome, {{ admin_username }}!</h2>
+
+    <p class="muted">
+        You are successfully logged in to the StegoSecure administration panel.
+    </p>
+
+    <div style="
+        margin-top:25px;
+        padding:18px;
+        background:rgba(0,229,255,.06);
+        border:1px solid rgba(0,229,255,.15);
+        border-radius:9px;
+    ">
+
+        <h3 style="color:#00e5ff;margin-top:0;">
+            Admin Panel Setup
+        </h3>
+
+        <p class="muted">
+            Your admin authentication is working. We will now build the
+            dashboard statistics, user management, credit plans,
+            revenue and system settings.
+        </p>
+
+    </div>
+
+</div>
+
+{% endblock %}

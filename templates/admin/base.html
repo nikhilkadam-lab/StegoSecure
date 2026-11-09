@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}StegoSecure Admin{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #080b16;
+            color: #fff;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 250px;
+            background: #0e1425;
+            border-right: 1px solid rgba(0,229,255,.15);
+            padding: 25px 18px;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 45px;
+            padding-left: 10px;
+        }
+
+        .brand span { color: #00e5ff; }
+
+        .menu-label {
+            color: #718096;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            padding: 0 12px;
+            margin-bottom: 15px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 13px 14px;
+            border-radius: 8px;
+            margin-bottom: 7px;
+            color: #aab5ca;
+            font-size: 14px;
+            transition: .2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(0,229,255,.10);
+            color: #00e5ff;
+        }
+
+        .nav-link.disabled {
+            opacity: .45;
+            cursor: default;
+        }
+
+        .main {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 75px;
+            background: #0e1425;
+            border-bottom: 1px solid rgba(0,229,255,.12);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 35px;
+        }
+
+        .topbar h2 {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .admin-info {
+            color: #00e5ff;
+            font-size: 13px;
+        }
+
+        .content { padding: 35px; }
+
+        .card {
+            background: #111a2e;
+            border: 1px solid rgba(0,229,255,.14);
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .muted { color: #8b9ab4; }
+
+        .flash {
+            padding: 13px 16px;
+            border-radius: 7px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            background: rgba(255,70,70,.12);
+            border: 1px solid rgba(255,70,70,.3);
+            color: #ff9292;
+        }
+
+        .flash.success {
+            background: rgba(0,220,150,.10);
+            border-color: rgba(0,220,150,.3);
+            color: #66e6b9;
+        }
+
+        .logout-form { margin-top: 35px; }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,70,70,.10);
+            border: 1px solid rgba(255,70,70,.25);
+            color: #ff9292;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover { background: rgba(255,70,70,.2); }
+
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+        @media(max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .25s;
+            }
+
+            .sidebar.open { transform: translateX(0); }
+
+            .main { margin-left: 0; }
+
+            .mobile-toggle { display: block; }
+
+            .topbar { padding: 0 18px; }
+
+            .content { padding: 20px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">Stego<span>Secure</span></div>
+
+    <div class="menu-label">ADMIN PANEL</div>
+
+    <a href="{{ url_for('admin.dashboard') }}"
+       class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+        Dashboard
+    </a>
+
+    <div class="nav-link disabled">Users — Coming next</div>
+    <div class="nav-link disabled">Credit Plans — Coming next</div>
+    <div class="nav-link disabled">Revenue — Coming next</div>
+    <div class="nav-link disabled">System Settings — Coming next</div>
+
+    <form method="POST"
+          action="{{ url_for('admin.logout') }}"
+          class="logout-form">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <button type="submit" class="logout-btn">
+            Logout
+        </button>
+    </form>
+
+</aside>
+
+<main class="main">
+
+    <header class="topbar">
+
+        <div style="display:flex;align-items:center;gap:15px;">
+            <button class="mobile-toggle"
+                    onclick="document.getElementById('sidebar').classList.toggle('open')">
+                ☰
+            </button>
+
+            <h2>{% block page_heading %}Dashboard{% endblock %}</h2>
+        </div>
+
+        <div class="admin-info">
+            Admin: {{ session.get('admin_username', 'Administrator') }}
+        </div>
+
+    </header>
+
+    <section class="content">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash {{ 'success' if category == 'success' else '' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+    </section>
+
+</main>
+
+</body>
+</html>

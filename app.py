@@ -82,6 +82,9 @@ from routes.payment_routes import payment_bp
 
 app.register_blueprint(payment_bp)
 
+from admin.admin_routes import admin_bp
+
+app.register_blueprint(admin_bp)
 
 def load_encrypted_png(uploaded):
     """
