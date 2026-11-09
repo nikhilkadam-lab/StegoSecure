@@ -645,7 +645,7 @@ def site_banner():
     # Default banner when no admin banner exists.
     return send_from_directory(
         str(BASE_DIR),
-        "StegoSecure Banner.png",
+        "StegoSecure-default-Banner.png",
     )
 
 
