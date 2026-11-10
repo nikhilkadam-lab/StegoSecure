@@ -1,0 +1,615 @@
+{% extends "admin/base.html" %}
+
+{% block title %}System Settings | StegoSecure{% endblock %}
+{% block page_heading %}System Settings{% endblock %}
+
+{% block content %}
+<style>
+    .settings-heading { margin-bottom: 25px; }
+    .settings-heading h2 { margin: 0 0 8px; font-size: 23px; }
+    .settings-heading p { color: #8b9ab4; font-size: 14px; margin: 0; }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 22px;
+    }
+
+    .settings-panel {
+        background: #111a2e;
+        border: 1px solid rgba(0,229,255,.14);
+        border-radius: 12px;
+        padding: 24px;
+        min-width: 0;
+    }
+
+    .panel-heading {
+        margin: 0 0 8px;
+        font-size: 17px;
+    }
+
+    .panel-description {
+        color: #8b9ab4;
+        font-size: 13px;
+        line-height: 1.6;
+        margin: 0 0 22px;
+    }
+
+    .limit-form {
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .field-group {
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .field-group label {
+        display: block;
+        color: #c4cee0;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 9px;
+    }
+
+    .field-group input {
+        width: 100%;
+        background: #080f20;
+        border: 1px solid #263651;
+        border-radius: 8px;
+        color: #fff;
+        padding: 12px 14px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .field-group input:focus { border-color: #00e5ff; }
+
+    .action-btn {
+        border: 1px solid rgba(0,229,255,.3);
+        background: rgba(0,229,255,.10);
+        color: #00e5ff;
+        padding: 12px 18px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        transition: .2s;
+    }
+
+    .action-btn:hover { background: rgba(0,229,255,.18); }
+    .action-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .upload-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .upload-row input[type="file"] {
+        flex: 1;
+        min-width: 220px;
+        color: #8b9ab4;
+        font-size: 12px;
+    }
+
+    .upload-row input[type="file"]::file-selector-button {
+        background: #080f20;
+        border: 1px solid #263651;
+        color: #c4cee0;
+        padding: 10px 13px;
+        border-radius: 7px;
+        margin-right: 12px;
+        cursor: pointer;
+    }
+
+    .settings-message {
+        display: none;
+        padding: 12px 14px;
+        border-radius: 7px;
+        margin-top: 16px;
+        font-size: 12px;
+    }
+
+    .settings-message.success {
+        display: block;
+        background: rgba(0,220,150,.10);
+        border: 1px solid rgba(0,220,150,.3);
+        color: #66e6b9;
+    }
+
+    .settings-message.error {
+        display: block;
+        background: rgba(255,70,70,.10);
+        border: 1px solid rgba(255,70,70,.3);
+        color: #ff9292;
+    }
+
+    .banner-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 17px;
+        margin-top: 22px;
+    }
+
+    .banner-card {
+        background: #080f20;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 10px;
+        overflow: hidden;
+        min-width: 0;
+    }
+
+    .banner-preview {
+        width: 100%;
+        height: 135px;
+        object-fit: cover;
+        display: block;
+        background: #151e30;
+    }
+
+    .banner-details { padding: 14px; }
+
+    .banner-filename {
+        color: #c4cee0;
+        font-size: 11px;
+        overflow-wrap: anywhere;
+        margin-bottom: 10px;
+    }
+
+    .banner-meta {
+        color: #718096;
+        font-size: 11px;
+        margin-bottom: 13px;
+    }
+
+    .banner-status {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 700;
+        margin-bottom: 13px;
+    }
+
+    .banner-status.active {
+        background: rgba(0,220,150,.10);
+        color: #55e6ae;
+    }
+
+    .banner-status.inactive {
+        background: rgba(255,255,255,.08);
+        color: #9aa8bf;
+    }
+
+    .banner-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .banner-actions button {
+        flex: 1;
+        min-width: 75px;
+        padding: 9px 8px;
+        font-size: 11px;
+    }
+
+    .delete-btn {
+        background: rgba(255,70,70,.08);
+        border-color: rgba(255,70,70,.25);
+        color: #ff9292;
+    }
+
+    .delete-btn:hover { background: rgba(255,70,70,.16); }
+
+    .empty-state, .loading-state, .error-state {
+        text-align: center;
+        padding: 28px;
+        color: #8b9ab4;
+        font-size: 13px;
+        grid-column: 1 / -1;
+    }
+
+    .error-state { color: #ff8585; }
+
+    @media(max-width: 600px) {
+        .settings-panel { padding: 17px; }
+        .limit-form { align-items: stretch; }
+        .limit-form .action-btn,
+        .upload-row .action-btn { width: 100%; }
+        .banner-list { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="settings-heading">
+    <h2>System Configuration</h2>
+    <p>Manage default encryption limits and website banners.</p>
+</div>
+
+<div class="settings-grid">
+
+    <!-- DEFAULT ENCRYPTION LIMIT -->
+    <section class="settings-panel">
+        <h3 class="panel-heading">Default Encryption Limit</h3>
+        <p class="panel-description">
+            Set the default number of encryption credits assigned to newly
+            registered users. Changes will not affect existing users or
+            their current credit balances.
+        </p>
+
+        <form class="limit-form" id="limit-form">
+            <div class="field-group">
+                <label for="default-limit">Default encryption credits</label>
+                <input
+                    type="number"
+                    id="default-limit"
+                    min="0"
+                    max="1000000"
+                    step="1"
+                    required
+                    placeholder="Loading..."
+                >
+            </div>
+
+            <button type="submit" class="action-btn" id="save-limit-btn">
+                Save Limit
+            </button>
+        </form>
+
+        <div class="settings-message" id="limit-message" role="status"></div>
+    </section>
+
+    <!-- BANNER MANAGEMENT -->
+    <section class="settings-panel">
+        <h3 class="panel-heading">Website Banner Management</h3>
+        <p class="panel-description">
+            Upload and manage homepage banners. Only one uploaded banner can
+            be active at a time. If none is active, the existing default
+            banner will be displayed.
+        </p>
+
+        <form id="banner-upload-form">
+            <div class="upload-row">
+                <input
+                    type="file"
+                    id="banner-file"
+                    name="banner"
+                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                    required
+                >
+
+                <button type="submit" class="action-btn" id="upload-banner-btn">
+                    Upload Banner
+                </button>
+            </div>
+        </form>
+
+        <div class="settings-message" id="banner-message" role="status"></div>
+
+        <div class="banner-list" id="banner-list">
+            <div class="loading-state">Loading banners...</div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const BASE_URL = "{{ url_for('admin.settings') }}".replace(/\/$/, "");
+    const LIMIT_URL = BASE_URL + "/api/limit";
+    const BANNERS_URL = BASE_URL + "/api/banners";
+    const CSRF_TOKEN = "{{ csrf_token() }}";
+
+    const limitForm = document.getElementById("limit-form");
+    const limitInput = document.getElementById("default-limit");
+    const saveLimitButton = document.getElementById("save-limit-btn");
+    const limitMessage = document.getElementById("limit-message");
+
+    const uploadForm = document.getElementById("banner-upload-form");
+    const bannerInput = document.getElementById("banner-file");
+    const uploadButton = document.getElementById("upload-banner-btn");
+    const bannerMessage = document.getElementById("banner-message");
+    const bannerList = document.getElementById("banner-list");
+
+    function showMessage(element, message, type) {
+        element.textContent = message;
+        element.className = "settings-message " + type;
+    }
+
+    function clearMessage(element) {
+        element.textContent = "";
+        element.className = "settings-message";
+    }
+
+    async function apiRequest(url, options = {}) {
+        const response = await fetch(url, {
+            credentials: "same-origin",
+            ...options,
+            headers: {
+                "Accept": "application/json",
+                "X-CSRFToken": CSRF_TOKEN,
+                ...(options.headers || {})
+            }
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || data.success === false) {
+            throw new Error(data.message || "Request failed.");
+        }
+
+        return data;
+    }
+
+    async function loadLimit() {
+        try {
+            const data = await apiRequest(LIMIT_URL);
+            limitInput.value = data.default_encryption_limit;
+        } catch (error) {
+            limitInput.placeholder = "Unable to load";
+            showMessage(limitMessage, error.message, "error");
+        }
+    }
+
+    limitForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        clearMessage(limitMessage);
+
+        const value = Number(limitInput.value);
+
+        if (!Number.isInteger(value) || value < 0 || value > 1000000) {
+            showMessage(
+                limitMessage,
+                "Enter a whole number between 0 and 1,000,000.",
+                "error"
+            );
+            return;
+        }
+
+        saveLimitButton.disabled = true;
+        saveLimitButton.textContent = "Saving...";
+
+        try {
+            const data = await apiRequest(LIMIT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    default_encryption_limit: value
+                })
+            });
+
+            limitInput.value = data.default_encryption_limit;
+            showMessage(limitMessage, data.message, "success");
+
+        } catch (error) {
+            showMessage(limitMessage, error.message, "error");
+        } finally {
+            saveLimitButton.disabled = false;
+            saveLimitButton.textContent = "Save Limit";
+        }
+    });
+
+    function formatSize(bytes) {
+        const size = Number(bytes || 0);
+
+        if (size < 1024) return size + " B";
+        if (size < 1024 * 1024) return (size / 1024).toFixed(1) + " KB";
+
+        return (size / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+    function formatDate(timestamp) {
+        const date = new Date(Number(timestamp) * 1000);
+
+        if (Number.isNaN(date.getTime())) return "Unknown date";
+
+        return date.toLocaleString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+    }
+
+    function createButton(label, className, callback) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "action-btn " + className;
+        button.textContent = label;
+        button.addEventListener("click", callback);
+        return button;
+    }
+
+    function renderBanner(banner) {
+        const card = document.createElement("article");
+        card.className = "banner-card";
+
+        const preview = document.createElement("img");
+        preview.className = "banner-preview";
+        preview.alt = "Uploaded website banner";
+        preview.loading = "lazy";
+        preview.src = BANNERS_URL + "/" +
+            encodeURIComponent(banner.filename) + "/image";
+
+        card.appendChild(preview);
+
+        const details = document.createElement("div");
+        details.className = "banner-details";
+
+        const filename = document.createElement("div");
+        filename.className = "banner-filename";
+        filename.textContent = banner.filename;
+        details.appendChild(filename);
+
+        const meta = document.createElement("div");
+        meta.className = "banner-meta";
+        meta.textContent =
+            formatSize(banner.size_bytes) + " · " +
+            formatDate(banner.updated_at);
+        details.appendChild(meta);
+
+        const status = document.createElement("span");
+        status.className = "banner-status " +
+            (banner.is_active ? "active" : "inactive");
+        status.textContent = banner.is_active ? "ACTIVE" : "INACTIVE";
+        details.appendChild(status);
+
+        const actions = document.createElement("div");
+        actions.className = "banner-actions";
+
+        if (banner.is_active) {
+            actions.appendChild(createButton(
+                "Deactivate",
+                "",
+                () => updateBannerStatus(banner.filename, false)
+            ));
+        } else {
+            actions.appendChild(createButton(
+                "Activate",
+                "",
+                () => updateBannerStatus(banner.filename, true)
+            ));
+        }
+
+        actions.appendChild(createButton(
+            "Delete",
+            "delete-btn",
+            () => deleteBanner(banner.filename)
+        ));
+
+        details.appendChild(actions);
+        card.appendChild(details);
+
+        return card;
+    }
+
+    async function loadBanners() {
+        bannerList.replaceChildren();
+
+        const loading = document.createElement("div");
+        loading.className = "loading-state";
+        loading.textContent = "Loading banners...";
+        bannerList.appendChild(loading);
+
+        try {
+            const data = await apiRequest(BANNERS_URL);
+            bannerList.replaceChildren();
+
+            const banners = data.banners || [];
+
+            if (banners.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty-state";
+                empty.textContent =
+                    "No uploaded banners yet. The default banner is currently available.";
+                bannerList.appendChild(empty);
+                return;
+            }
+
+            banners.forEach(banner => {
+                bannerList.appendChild(renderBanner(banner));
+            });
+
+        } catch (error) {
+            bannerList.replaceChildren();
+
+            const errorElement = document.createElement("div");
+            errorElement.className = "error-state";
+            errorElement.textContent = error.message;
+            bannerList.appendChild(errorElement);
+        }
+    }
+
+    uploadForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        clearMessage(bannerMessage);
+
+        if (!bannerInput.files.length) {
+            showMessage(bannerMessage, "Choose a banner image first.", "error");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("banner", bannerInput.files[0]);
+
+        uploadButton.disabled = true;
+        uploadButton.textContent = "Uploading...";
+
+        try {
+            const data = await apiRequest(BANNERS_URL, {
+                method: "POST",
+                body: formData
+            });
+
+            bannerInput.value = "";
+            showMessage(bannerMessage, data.message, "success");
+            await loadBanners();
+
+        } catch (error) {
+            showMessage(bannerMessage, error.message, "error");
+        } finally {
+            uploadButton.disabled = false;
+            uploadButton.textContent = "Upload Banner";
+        }
+    });
+
+    async function updateBannerStatus(filename, isActive) {
+        const action = isActive ? "activate" : "deactivate";
+
+        if (!confirm("Are you sure you want to " + action + " this banner?")) {
+            return;
+        }
+
+        clearMessage(bannerMessage);
+
+        try {
+            const data = await apiRequest(
+                BANNERS_URL + "/" + encodeURIComponent(filename) + "/status",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ is_active: isActive })
+                }
+            );
+
+            showMessage(bannerMessage, data.message, "success");
+            await loadBanners();
+
+        } catch (error) {
+            showMessage(bannerMessage, error.message, "error");
+        }
+    }
+
+    async function deleteBanner(filename) {
+        if (!confirm(
+            "Delete this uploaded banner permanently? This action cannot be undone."
+        )) {
+            return;
+        }
+
+        clearMessage(bannerMessage);
+
+        try {
+            const data = await apiRequest(
+                BANNERS_URL + "/" + encodeURIComponent(filename),
+                { method: "DELETE" }
+            );
+
+            showMessage(bannerMessage, data.message, "success");
+            await loadBanners();
+
+        } catch (error) {
+            showMessage(bannerMessage, error.message, "error");
+        }
+    }
+
+    loadLimit();
+    loadBanners();
+});
+</script>
+{% endblock %}

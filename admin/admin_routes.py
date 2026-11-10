@@ -1,3 +1,4 @@
+from pathlib import Path
 from flask import (
     Blueprint,
     render_template,
@@ -7,6 +8,7 @@ from flask import (
     session,
     flash,
     current_app,
+    send_from_directory,
 )
 
 from argon2 import PasswordHasher
@@ -37,6 +39,15 @@ from .user_service import (
 from .revenue_service import (
     get_revenue_summary,
     get_transactions,
+)
+from .settings_service import (
+    get_default_encryption_limit,
+    update_default_encryption_limit,
+    list_uploaded_banners,
+    save_uploaded_banner,
+    activate_banner,
+    deactivate_banner,
+    delete_uploaded_banner,
 )
 
 admin_bp = Blueprint(
@@ -572,6 +583,210 @@ def revenue_transactions_api():
             "success": False,
             "message": "Unable to load transactions.",
         }), 500
+
+
+
+# ============================================================
+# SYSTEM SETTINGS
+# ============================================================
+
+@admin_bp.route("/settings")
+@admin_required
+def settings():
+    return render_template(
+        "admin/settings.html",
+        admin_username=session.get("admin_username"),
+    )
+
+
+@admin_bp.route("/settings/api/limit", methods=["GET"])
+@admin_required
+def settings_limit_api():
+    try:
+        return jsonify({
+            "success": True,
+            "default_encryption_limit": get_default_encryption_limit(),
+        })
+    except Exception:
+        current_app.logger.exception("Unable to load default encryption limit")
+        return jsonify({
+            "success": False,
+            "message": "Unable to load encryption limit.",
+        }), 500
+
+
+@admin_bp.route("/settings/api/limit", methods=["POST"])
+@admin_required
+def update_settings_limit_api():
+    try:
+        data = request.get_json(silent=True) or {}
+        value = data.get("default_encryption_limit")
+
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError("Enter a valid whole-number encryption limit.")
+
+        update_default_encryption_limit(value)
+
+        return jsonify({
+            "success": True,
+            "message": "Default encryption limit updated successfully.",
+            "default_encryption_limit": value,
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc),
+        }), 400
+
+    except Exception:
+        current_app.logger.exception("Default encryption limit update failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to update encryption limit.",
+        }), 500
+
+
+@admin_bp.route("/settings/api/banners", methods=["GET"])
+@admin_required
+def settings_banners_api():
+    try:
+        banners = list_uploaded_banners(current_app.instance_path)
+
+        return jsonify({
+            "success": True,
+            "banners": banners,
+        })
+
+    except Exception:
+        current_app.logger.exception("Unable to load admin banners")
+        return jsonify({
+            "success": False,
+            "message": "Unable to load banners.",
+        }), 500
+
+
+@admin_bp.route("/settings/api/banners", methods=["POST"])
+@admin_required
+def upload_banner_api():
+    try:
+        uploaded_file = request.files.get("banner")
+
+        filename = save_uploaded_banner(
+            uploaded_file,
+            current_app.instance_path,
+        )
+
+        return jsonify({
+            "success": True,
+            "message": "Banner uploaded successfully.",
+            "filename": filename,
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc),
+        }), 400
+
+    except Exception:
+        current_app.logger.exception("Admin banner upload failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to upload banner.",
+        }), 500
+
+
+@admin_bp.route(
+    "/settings/api/banners/<filename>/status",
+    methods=["POST"],
+)
+@admin_required
+def update_banner_status_api(filename):
+    try:
+        data = request.get_json(silent=True) or {}
+        is_active = data.get("is_active")
+
+        if not isinstance(is_active, bool):
+            raise ValueError("Invalid banner status.")
+
+        if is_active:
+            activate_banner(filename, current_app.instance_path)
+            message = "Banner activated successfully."
+        else:
+            deactivate_banner(filename, current_app.instance_path)
+            message = "Banner deactivated. Default banner will be displayed."
+
+        return jsonify({
+            "success": True,
+            "message": message,
+            "is_active": is_active,
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc),
+        }), 400
+
+    except Exception:
+        current_app.logger.exception("Admin banner status update failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to update banner status.",
+        }), 500
+
+
+@admin_bp.route(
+    "/settings/api/banners/<filename>",
+    methods=["DELETE"],
+)
+@admin_required
+def delete_banner_api(filename):
+    try:
+        delete_uploaded_banner(filename, current_app.instance_path)
+
+        return jsonify({
+            "success": True,
+            "message": "Banner deleted successfully.",
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc),
+        }), 400
+
+    except Exception:
+        current_app.logger.exception("Admin banner deletion failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to delete banner.",
+        }), 500
+
+
+@admin_bp.route("/settings/api/banners/<filename>/image", methods=["GET"])
+@admin_required
+def preview_banner_api(filename):
+    allowed_extensions = {".png", ".jpg", ".jpeg", ".webp"}
+
+    if (
+        filename != Path(filename).name
+        or not filename.startswith("admin_")
+        or Path(filename).suffix.lower() not in allowed_extensions
+    ):
+        return jsonify({
+            "success": False,
+            "message": "Invalid banner filename.",
+        }), 400
+
+    banner_directory = Path(current_app.instance_path) / "banners"
+
+    return send_from_directory(
+        str(banner_directory),
+        filename,
+    )
+
 
 @admin_bp.route("/logout", methods=["POST"])
 @admin_required
