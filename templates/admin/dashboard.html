@@ -278,6 +278,25 @@
         </div>
     </div>
 
+    <div class="stat-card">
+    <div class="stat-icon">★</div>
+    <div class="stat-label">Popular Plan</div>
+    <div class="stat-value plan-highlight" style="font-size:20px;">
+        {% if popular_plan %}
+            {{ popular_plan.name }}
+        {% else %}
+            No popular plan selected
+        {% endif %}
+    </div>
+    <div class="stat-note">
+        {% if popular_plan %}
+            Manually selected in Credit Plans
+        {% else %}
+            Select a plan from Credit Plans
+        {% endif %}
+    </div>
+</div>
+
 </div>
 
 <!-- RECENT TRANSACTIONS -->

@@ -21,6 +21,14 @@ from utils.validators import normalize_email
 from .admin_auth import admin_required, get_active_admin
 from .dashboard_service import get_dashboard_statistics
 from flask import jsonify
+from .plan_service import (
+    get_all_plans,
+    get_popular_plan_id,
+    create_plan,
+    update_plan,
+    update_plan_status,
+    delete_plan,
+)
 from .user_service import (
     get_users,
     update_user_status,
@@ -129,12 +137,24 @@ def dashboard():
 
     dashboard_data = get_dashboard_statistics()
 
+    popular_plan_id = get_popular_plan_id()
+    plans = get_all_plans()
+
+    popular_plan = next(
+        (
+            plan for plan in plans
+            if plan["id"] == popular_plan_id
+        ),
+        None
+    )
+
     return render_template(
         "admin/dashboard.html",
         admin_username=session.get("admin_username"),
         statistics=dashboard_data["statistics"],
         recent_transactions=dashboard_data["recent_transactions"],
         recent_users=dashboard_data["recent_users"],
+        popular_plan=popular_plan,
     )
 
 
@@ -144,6 +164,17 @@ def users():
     return render_template(
         "admin/users.html",
         admin_username=session.get("admin_username"),
+    )
+
+
+@admin_bp.route("/credit-plans")
+@admin_required
+def credit_plans():
+    return render_template(
+        "admin/credit_plans.html",
+        admin_username=session.get("admin_username"),
+        plans=get_all_plans(),
+        popular_plan_id=get_popular_plan_id(),
     )
 
 
@@ -282,6 +313,170 @@ def update_user_credits_api(user_id):
         return jsonify({
             "success": False,
             "message": "Unable to update credits."
+        }), 500
+
+
+
+@admin_bp.route("/credit-plans/api", methods=["GET"])
+@admin_required
+def credit_plans_api():
+    try:
+        plans = get_all_plans()
+        popular_plan_id = get_popular_plan_id()
+
+        return jsonify({
+            "success": True,
+            "plans": plans,
+            "popular_plan_id": popular_plan_id,
+        })
+
+    except Exception:
+        current_app.logger.exception("Admin credit plans listing failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to load credit plans."
+        }), 500
+
+
+@admin_bp.route("/credit-plans", methods=["POST"])
+@admin_required
+def create_plan_api():
+    try:
+        data = request.get_json(silent=True) or {}
+
+        name = data.get("name")
+        price = data.get("price")
+        credits = data.get("credits")
+        is_popular = data.get("is_popular", False)
+
+        if isinstance(credits, bool) or not isinstance(credits, int):
+            raise ValueError("Credits must be a whole number.")
+
+        if not isinstance(is_popular, bool):
+            raise ValueError("Invalid Popular selection.")
+
+        plan_id = create_plan(name, price, credits, is_popular)
+
+        return jsonify({
+            "success": True,
+            "message": "Credit plan created successfully.",
+            "plan_id": plan_id,
+            "popular_plan_id": get_popular_plan_id(),
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc)
+        }), 400
+
+    except Exception:
+        current_app.logger.exception("Admin credit plan creation failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to create credit plan."
+        }), 500
+
+
+@admin_bp.route("/credit-plans/<int:plan_id>", methods=["PUT"])
+@admin_required
+def update_plan_api(plan_id):
+    try:
+        data = request.get_json(silent=True) or {}
+
+        name = data.get("name")
+        price = data.get("price")
+        credits = data.get("credits")
+        is_popular = data.get("is_popular", False)
+
+        if isinstance(credits, bool) or not isinstance(credits, int):
+            raise ValueError("Credits must be a whole number.")
+
+        if not isinstance(is_popular, bool):
+            raise ValueError("Invalid Popular selection.")
+
+        update_plan(plan_id, name, price, credits, is_popular)
+
+        return jsonify({
+            "success": True,
+            "message": "Credit plan updated successfully.",
+            "popular_plan_id": get_popular_plan_id(),
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc)
+        }), 400
+
+    except Exception:
+        current_app.logger.exception("Admin credit plan update failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to update credit plan."
+        }), 500
+
+
+@admin_bp.route("/credit-plans/<int:plan_id>/status", methods=["POST"])
+@admin_required
+def update_plan_status_api(plan_id):
+    try:
+        data = request.get_json(silent=True) or {}
+        is_active = data.get("is_active")
+
+        if not isinstance(is_active, bool):
+            raise ValueError("Invalid plan status.")
+
+        update_plan_status(plan_id, is_active)
+
+        return jsonify({
+            "success": True,
+            "message": (
+                "Plan enabled successfully."
+                if is_active
+                else "Plan disabled successfully."
+            ),
+            "is_active": is_active,
+            "popular_plan_id": get_popular_plan_id(),
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc)
+        }), 400
+
+    except Exception:
+        current_app.logger.exception("Admin credit plan status update failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to update plan status."
+        }), 500
+
+
+@admin_bp.route("/credit-plans/<int:plan_id>", methods=["DELETE"])
+@admin_required
+def delete_plan_api(plan_id):
+    try:
+        delete_plan(plan_id)
+
+        return jsonify({
+            "success": True,
+            "message": "Credit plan deleted successfully.",
+            "popular_plan_id": get_popular_plan_id(),
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc)
+        }), 400
+
+    except Exception:
+        current_app.logger.exception("Admin credit plan deletion failed")
+        return jsonify({
+            "success": False,
+            "message": "Unable to delete credit plan."
         }), 500
 
 

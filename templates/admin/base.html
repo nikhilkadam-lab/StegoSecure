@@ -182,7 +182,10 @@
    class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
     Users
 </a>
-    <div class="nav-link disabled">Credit Plans — Coming next</div>
+    <a href="{{ url_for('admin.credit_plans') }}"
+   class="nav-link {% if request.endpoint == 'admin.credit_plans' %}active{% endif %}">
+    Credit Plans
+</a>
     <div class="nav-link disabled">Revenue — Coming next</div>
     <div class="nav-link disabled">System Settings — Coming next</div>
 

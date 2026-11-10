@@ -1,0 +1,699 @@
+
+{% extends "admin/base.html" %}
+
+{% block title %}Credit Plans | StegoSecure Admin{% endblock %}
+
+{% block content %}
+<style>
+    .plans-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
+    }
+
+    .plans-heading h1 {
+        color: #f1f5f9;
+        font-size: 25px;
+        margin: 0 0 6px;
+    }
+
+    .plans-heading p {
+        color: #94a3b8;
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .plan-primary-btn,
+    .plan-action-btn {
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    .plan-primary-btn {
+        background: #06b6d4;
+        color: #07111e;
+    }
+
+    .plan-primary-btn:hover {
+        background: #22d3ee;
+    }
+
+    .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+        gap: 20px;
+    }
+
+    .plan-card {
+        position: relative;
+        background: #111a2e;
+        border: 1px solid #26334c;
+        border-radius: 13px;
+        padding: 22px;
+        min-width: 0;
+    }
+
+    .plan-card.disabled {
+        opacity: .65;
+    }
+
+    .plan-card.popular {
+        border-color: #06b6d4;
+        box-shadow: 0 0 0 1px rgba(6, 182, 212, .15);
+    }
+
+    .plan-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .plan-name {
+        color: #f8fafc;
+        font-size: 18px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .plan-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-end;
+    }
+
+    .plan-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 5px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    .popular-badge {
+        color: #67e8f9;
+        background: rgba(6, 182, 212, .15);
+    }
+
+    .status-badge {
+        color: #86efac;
+        background: rgba(34, 197, 94, .12);
+    }
+
+    .status-badge.inactive {
+        color: #fca5a5;
+        background: rgba(239, 68, 68, .12);
+    }
+
+    .plan-price {
+        color: #f8fafc;
+        font-size: 30px;
+        font-weight: 750;
+        margin: 24px 0 5px;
+    }
+
+    .plan-price small {
+        color: #94a3b8;
+        font-size: 12px;
+        font-weight: 400;
+    }
+
+    .plan-credits {
+        color: #94a3b8;
+        font-size: 13px;
+        margin-bottom: 23px;
+    }
+
+    .plan-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        border-top: 1px solid #26334c;
+        padding-top: 17px;
+    }
+
+    .plan-action-btn {
+        background: #1e293b;
+        color: #cbd5e1;
+    }
+
+    .plan-action-btn:hover {
+        background: #334155;
+    }
+
+    .plan-action-btn.danger {
+        color: #fca5a5;
+    }
+
+    .plans-empty {
+        background: #111a2e;
+        border: 1px dashed #334155;
+        border-radius: 12px;
+        padding: 35px;
+        text-align: center;
+        color: #94a3b8;
+        grid-column: 1 / -1;
+    }
+
+    .plans-feedback {
+        margin: 0 0 18px;
+        font-size: 13px;
+        color: #fca5a5;
+        display: none;
+    }
+
+    .manage-modal[hidden] {
+        display: none;
+    }
+
+    .manage-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 18px;
+    }
+
+    .manage-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(2, 6, 23, .78);
+        backdrop-filter: blur(3px);
+    }
+
+    .manage-modal-content {
+        position: relative;
+        width: 100%;
+        max-width: 430px;
+        background: #111a2e;
+        border: 1px solid #06b6d4;
+        border-radius: 13px;
+        padding: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .4);
+    }
+
+    .manage-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+    }
+
+    .manage-modal-header h2 {
+        color: #f8fafc;
+        font-size: 19px;
+        margin: 0;
+    }
+
+    .modal-close {
+        border: 0;
+        background: transparent;
+        color: #94a3b8;
+        font-size: 25px;
+        cursor: pointer;
+    }
+
+    .manage-section {
+        margin-bottom: 16px;
+    }
+
+    .manage-section label {
+        display: block;
+        color: #cbd5e1;
+        font-size: 13px;
+        margin-bottom: 7px;
+    }
+
+    .manage-section input {
+        width: 100%;
+        box-sizing: border-box;
+        background: #080f20;
+        border: 1px solid #334155;
+        border-radius: 7px;
+        padding: 11px;
+        color: #f8fafc;
+        outline: none;
+    }
+
+    .manage-section input:focus {
+        border-color: #06b6d4;
+    }
+
+    .popular-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: #cbd5e1;
+        font-size: 13px;
+        margin: 18px 0;
+    }
+
+    .popular-checkbox input {
+        width: auto;
+        accent-color: #06b6d4;
+    }
+
+    .manage-action-btn {
+        width: 100%;
+        background: #06b6d4;
+        color: #07111e;
+        padding: 12px;
+    }
+
+    .manage-action-btn:hover {
+        background: #22d3ee;
+    }
+
+    .manage-action-btn:disabled {
+        opacity: .6;
+        cursor: wait;
+    }
+
+    #manage-feedback {
+        color: #fca5a5;
+        font-size: 13px;
+        margin-top: 12px;
+        min-height: 18px;
+    }
+
+    @media (max-width: 600px) {
+        .plans-heading h1 {
+            font-size: 22px;
+        }
+
+        .plans-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="plans-heading">
+    <div>
+        <h1>Credit Plans</h1>
+        <p>Manage customer credit packages and pricing.</p>
+    </div>
+
+    <button type="button" class="plan-primary-btn" id="addPlanBtn">
+        + Add New Plan
+    </button>
+</div>
+
+<div class="plans-feedback" id="plansFeedback" role="alert"></div>
+
+<div class="plans-grid" id="plansGrid">
+    {% for plan in plans %}
+    <article class="plan-card {% if not plan.is_active %}disabled{% endif %} {% if plan.id == popular_plan_id %}popular{% endif %}"
+             data-plan-id="{{ plan.id }}">
+
+        <div class="plan-card-top">
+            <div class="plan-name">{{ plan.name }}</div>
+
+            <div class="plan-badges">
+                {% if plan.id == popular_plan_id %}
+                <span class="plan-badge popular-badge">POPULAR</span>
+                {% endif %}
+
+                <span class="plan-badge status-badge {% if not plan.is_active %}inactive{% endif %}">
+                    {{ "Active" if plan.is_active else "Disabled" }}
+                </span>
+            </div>
+        </div>
+
+        <div class="plan-price">
+            ₹{{ "%.2f"|format(plan.price) }}
+        </div>
+
+        <div class="plan-credits">
+            {{ plan.encryptions }} credits
+        </div>
+
+        <div class="plan-card-actions">
+            <button type="button" class="plan-action-btn edit-plan-btn"
+                    data-plan-id="{{ plan.id }}">Edit</button>
+
+            <button type="button" class="plan-action-btn toggle-plan-btn"
+                    data-plan-id="{{ plan.id }}"
+                    data-active="{{ 'true' if plan.is_active else 'false' }}">
+                {{ "Disable" if plan.is_active else "Enable" }}
+            </button>
+
+            <button type="button" class="plan-action-btn danger delete-plan-btn"
+                    data-plan-id="{{ plan.id }}">Delete</button>
+        </div>
+    </article>
+    {% else %}
+    <div class="plans-empty">No credit plans found. Add your first plan to get started.</div>
+    {% endfor %}
+</div>
+
+<!-- Add / Edit Plan Modal -->
+<div class="manage-modal" id="planModal" hidden>
+    <div class="manage-modal-backdrop" id="planModalBackdrop"></div>
+
+    <div class="manage-modal-content" role="dialog"
+         aria-modal="true" aria-labelledby="planModalTitle">
+
+        <div class="manage-modal-header">
+            <h2 id="planModalTitle">Add New Plan</h2>
+            <button type="button" class="modal-close" id="closePlanModal"
+                    aria-label="Close">&times;</button>
+        </div>
+
+        <form id="planForm">
+            <div class="manage-section">
+                <label for="planName">Plan Name</label>
+                <input type="text" id="planName" maxlength="50"
+                       placeholder="e.g. Premium" required>
+            </div>
+
+            <div class="manage-section">
+                <label for="planPrice">Price (₹)</label>
+                <input type="number" id="planPrice" min="0"
+                       max="100000000" step="0.01" required>
+            </div>
+
+            <div class="manage-section">
+                <label for="planCredits">Credits</label>
+                <input type="number" id="planCredits" min="1"
+                       max="100000000" step="1" required>
+            </div>
+
+            <label class="popular-checkbox">
+                <input type="checkbox" id="planPopular">
+                Mark as Popular
+            </label>
+
+            <button type="submit" class="manage-action-btn" id="savePlanBtn">
+                Add Plan
+            </button>
+
+            <div id="manage-feedback" role="alert"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+(() => {
+    const API_URL = {{ url_for('admin.credit_plans_api')|tojson }};
+    const CREATE_URL = {{ url_for('admin.create_plan_api')|tojson }};
+    const UPDATE_URL = {{ url_for('admin.update_plan_api', plan_id=0)|tojson }};
+    const STATUS_URL = {{ url_for('admin.update_plan_status_api', plan_id=0)|tojson }};
+    const DELETE_URL = {{ url_for('admin.delete_plan_api', plan_id=0)|tojson }};
+    const CSRF_TOKEN = {{ csrf_token()|tojson }};
+
+    const grid = document.getElementById("plansGrid");
+    const modal = document.getElementById("planModal");
+    const form = document.getElementById("planForm");
+    const feedback = document.getElementById("manage-feedback");
+    const pageFeedback = document.getElementById("plansFeedback");
+    const modalTitle = document.getElementById("planModalTitle");
+    const saveButton = document.getElementById("savePlanBtn");
+
+    const nameInput = document.getElementById("planName");
+    const priceInput = document.getElementById("planPrice");
+    const creditsInput = document.getElementById("planCredits");
+    const popularInput = document.getElementById("planPopular");
+
+    let plans = {{ plans|tojson }};
+    let popularPlanId = {{ popular_plan_id|tojson }};
+    let editingPlanId = null;
+    let saving = false;
+
+    function showPageError(message) {
+        pageFeedback.textContent = message;
+        pageFeedback.style.display = "block";
+    }
+
+    function clearPageError() {
+        pageFeedback.textContent = "";
+        pageFeedback.style.display = "none";
+    }
+
+    async function apiRequest(url, method = "GET", body = null) {
+        const options = {
+            method,
+            credentials: "same-origin",
+            headers: {
+                "Accept": "application/json",
+                "X-CSRFToken": CSRF_TOKEN
+            }
+        };
+
+        if (body !== null) {
+            options.headers["Content-Type"] = "application/json";
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(url, options);
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || "The request could not be completed.");
+        }
+
+        return data;
+    }
+
+    function renderPlans() {
+        grid.replaceChildren();
+
+        if (!plans.length) {
+            const empty = document.createElement("div");
+            empty.className = "plans-empty";
+            empty.textContent = "No credit plans found. Add your first plan to get started.";
+            grid.appendChild(empty);
+            return;
+        }
+
+        plans.forEach(plan => {
+            const card = document.createElement("article");
+            card.className = "plan-card";
+            if (!plan.is_active) card.classList.add("disabled");
+            if (Number(plan.id) === Number(popularPlanId)) card.classList.add("popular");
+
+            const top = document.createElement("div");
+            top.className = "plan-card-top";
+
+            const name = document.createElement("div");
+            name.className = "plan-name";
+            name.textContent = plan.name;
+
+            const badges = document.createElement("div");
+            badges.className = "plan-badges";
+
+            if (Number(plan.id) === Number(popularPlanId)) {
+                const popular = document.createElement("span");
+                popular.className = "plan-badge popular-badge";
+                popular.textContent = "POPULAR";
+                badges.appendChild(popular);
+            }
+
+            const status = document.createElement("span");
+            status.className = "plan-badge status-badge";
+            status.textContent = plan.is_active ? "Active" : "Disabled";
+            if (!plan.is_active) status.classList.add("inactive");
+
+            badges.appendChild(status);
+            top.append(name, badges);
+
+            const price = document.createElement("div");
+            price.className = "plan-price";
+            price.textContent = `₹${Number(plan.price).toFixed(2)}`;
+
+            const credits = document.createElement("div");
+            credits.className = "plan-credits";
+            credits.textContent = `${plan.encryptions} credits`;
+
+            const actions = document.createElement("div");
+            actions.className = "plan-card-actions";
+
+            const edit = document.createElement("button");
+            edit.type = "button";
+            edit.className = "plan-action-btn edit-plan-btn";
+            edit.textContent = "Edit";
+            edit.addEventListener("click", () => openEditModal(plan.id));
+
+            const toggle = document.createElement("button");
+            toggle.type = "button";
+            toggle.className = "plan-action-btn toggle-plan-btn";
+            toggle.textContent = plan.is_active ? "Disable" : "Enable";
+            toggle.addEventListener("click", () => togglePlan(plan));
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "plan-action-btn danger delete-plan-btn";
+            remove.textContent = "Delete";
+            remove.addEventListener("click", () => removePlan(plan));
+
+            actions.append(edit, toggle, remove);
+            card.append(top, price, credits, actions);
+            grid.appendChild(card);
+        });
+    }
+
+    async function refreshPlans() {
+        const data = await apiRequest(API_URL);
+        plans = data.plans;
+        popularPlanId = data.popular_plan_id;
+        renderPlans();
+    }
+
+    function openModal() {
+        modal.hidden = false;
+        document.body.style.overflow = "hidden";
+        nameInput.focus();
+    }
+
+    function closeModal() {
+        if (saving) return;
+        modal.hidden = true;
+        document.body.style.overflow = "";
+        form.reset();
+        feedback.textContent = "";
+        editingPlanId = null;
+    }
+
+    function openAddModal() {
+        editingPlanId = null;
+        form.reset();
+        feedback.textContent = "";
+        modalTitle.textContent = "Add New Plan";
+        saveButton.textContent = "Add Plan";
+        openModal();
+    }
+
+    function openEditModal(planId) {
+        const plan = plans.find(item => Number(item.id) === Number(planId));
+        if (!plan) return;
+
+        editingPlanId = Number(plan.id);
+        nameInput.value = plan.name;
+        priceInput.value = Number(plan.price).toFixed(2);
+        creditsInput.value = plan.encryptions;
+        popularInput.checked = Number(plan.id) === Number(popularPlanId);
+
+        feedback.textContent = "";
+        modalTitle.textContent = "Edit Credit Plan";
+        saveButton.textContent = "Save Changes";
+        openModal();
+    }
+
+    async function togglePlan(plan) {
+        const nextStatus = !plan.is_active;
+        const action = nextStatus ? "enable" : "disable";
+
+        if (!confirm(`Are you sure you want to ${action} "${plan.name}"?`)) {
+            return;
+        }
+
+        clearPageError();
+
+        try {
+            await apiRequest(
+                STATUS_URL.replace("/0/status", `/${plan.id}/status`),
+                "POST",
+                { is_active: nextStatus }
+            );
+            await refreshPlans();
+        } catch (error) {
+            showPageError(error.message);
+        }
+    }
+
+    async function removePlan(plan) {
+        if (!confirm(`Delete "${plan.name}" permanently? This cannot be undone.`)) {
+            return;
+        }
+
+        clearPageError();
+
+        try {
+            await apiRequest(
+                DELETE_URL.replace("/0", `/${plan.id}`),
+                "DELETE"
+            );
+            await refreshPlans();
+        } catch (error) {
+            showPageError(error.message);
+        }
+    }
+
+    document.getElementById("addPlanBtn").addEventListener("click", openAddModal);
+    document.getElementById("closePlanModal").addEventListener("click", closeModal);
+    document.getElementById("planModalBackdrop").addEventListener("click", closeModal);
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !modal.hidden) closeModal();
+    });
+
+    grid.addEventListener("click", event => {
+        const button = event.target.closest(".edit-plan-btn");
+        if (button) openEditModal(button.dataset.planId);
+    });
+
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (saving) return;
+
+        feedback.textContent = "";
+
+        const name = nameInput.value.trim();
+        const price = Number(priceInput.value);
+        const creditsValue = Number(creditsInput.value);
+        const isPopular = popularInput.checked;
+
+        if (!name || !Number.isFinite(price) || price < 0 ||
+            !Number.isInteger(creditsValue) || creditsValue < 1) {
+            feedback.textContent = "Please enter a valid name, price, and whole-number credit amount.";
+            return;
+        }
+
+        const payload = {
+            name,
+            price,
+            credits: creditsValue,
+            is_popular: isPopular
+        };
+
+        saving = true;
+        saveButton.disabled = true;
+
+        try {
+            if (editingPlanId === null) {
+                await apiRequest(CREATE_URL, "POST", payload);
+            } else {
+                await apiRequest(
+                    UPDATE_URL.replace("/0", `/${editingPlanId}`),
+                    "PUT",
+                    payload
+                );
+            }
+
+            saving = false;
+            saveButton.disabled = false;
+            closeModal();
+            await refreshPlans();
+            clearPageError();
+
+        } catch (error) {
+            feedback.textContent = error.message;
+            saving = false;
+            saveButton.disabled = false;
+        }
+    });
+
+    renderPlans();
+})();
+</script>
+{% endblock %}

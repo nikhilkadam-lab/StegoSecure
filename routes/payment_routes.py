@@ -14,6 +14,7 @@ from services.payment_service import (
 )
 from services.credit_service import get_remaining_credits
 from services.payment_service import verify_and_credit_payment
+from admin.plan_service import get_popular_plan_id
 
 
 payment_bp = Blueprint("payments", __name__)
@@ -30,11 +31,13 @@ def credits_page():
     try:
         plans = get_active_plans()
         remaining_credits = get_remaining_credits(session["user_id"])
+        popular_plan_id = get_popular_plan_id()
 
         return render_template(
             "credits.html",
             plans=plans,
             remaining_credits=remaining_credits,
+            popular_plan_id=popular_plan_id,
         )
 
     except Exception:
