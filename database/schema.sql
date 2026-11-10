@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS stego_secure
 
 USE stego_secure;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     email VARCHAR(254) NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE users (
     UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB;
 
-CREATE TABLE admins (
+CREATE TABLE IF NOT EXISTS admins (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
     email VARCHAR(254) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE admins (
     UNIQUE KEY uq_admins_email (email)
 ) ENGINE=InnoDB;
 
-CREATE TABLE plans (
+CREATE TABLE IF NOT EXISTS plans (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     price DECIMAL(10,2) NOT NULL,
@@ -42,12 +42,12 @@ CREATE TABLE plans (
     CONSTRAINT chk_plans_price CHECK (price >= 0)
 ) ENGINE=InnoDB;
 
-CREATE TABLE system_settings (
+CREATE TABLE IF NOT EXISTS system_settings (
     setting_key VARCHAR(50) PRIMARY KEY,
     setting_value INT NOT NULL
 ) ENGINE=InnoDB;
 
-CREATE TABLE encryption_limits (
+CREATE TABLE IF NOT EXISTS encryption_limits (
     user_id INT UNSIGNED PRIMARY KEY,
     remaining_attempts INT UNSIGNED NOT NULL DEFAULT 5,
     CONSTRAINT chk_remaining_attempts
@@ -57,7 +57,7 @@ CREATE TABLE encryption_limits (
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE gallery (
+CREATE TABLE IF NOT EXISTS gallery (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     image_path VARCHAR(500) NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE gallery (
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     plan_id INT UNSIGNED NOT NULL,
@@ -101,7 +101,9 @@ CREATE TABLE payments (
 ) ENGINE=InnoDB;
 
 INSERT INTO system_settings (setting_key, setting_value)
-VALUES ('default_encryption_limit', 5);
+VALUES ('default_encryption_limit', 5)
+ON DUPLICATE KEY UPDATE
+    setting_value = setting_value;
 
 CREATE TABLE IF NOT EXISTS site_settings (
     setting_key VARCHAR(100) PRIMARY KEY,

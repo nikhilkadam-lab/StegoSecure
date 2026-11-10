@@ -538,7 +538,7 @@
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
-                {% if category != "encryption_error" %}
+                {% if category != "encryption_error" and not (request.endpoint == "auth.profile" and request.args.get("panel") == "password") %}
                     <!-- Updated Flash Message to match dark theme -->
                     <div class="flash-message-container">
                         {{ message }}

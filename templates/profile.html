@@ -607,6 +607,14 @@
 
                 <h2>Change Password</h2>
 
+                {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+        <div class="flash-message-container" id="password-flash-message">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
                 <form method="POST"
                       action="{{ url_for('auth.change_password') }}">
 
@@ -846,8 +854,18 @@ document.addEventListener("DOMContentLoaded", function () {
     if (params.get("panel") === "password") {
         showTab("account-tab");
         showAction("password-panel");
-    }
 
+        const passwordMessage = document.getElementById(
+            "password-flash-message"
+        );
+
+        if (passwordMessage) {
+            passwordMessage.scrollIntoView({
+                behavior: "auto",
+                block: "center"
+            });
+        }
+    }
     // LIVE NEW PASSWORD VALIDATION
     const newPassword = document.getElementById("new_password");
     const confirmPassword = document.getElementById("confirm_new_password");
