@@ -186,7 +186,10 @@
    class="nav-link {% if request.endpoint == 'admin.credit_plans' %}active{% endif %}">
     Credit Plans
 </a>
-    <div class="nav-link disabled">Revenue — Coming next</div>
+    <a href="{{ url_for('admin.revenue') }}"
+   class="nav-link {% if request.endpoint == 'admin.revenue' %}active{% endif %}">
+    Revenue & Transaction
+</a>
     <div class="nav-link disabled">System Settings — Coming next</div>
 
     <form method="POST"

@@ -34,6 +34,10 @@ from .user_service import (
     update_user_status,
     update_user_credits,
 )
+from .revenue_service import (
+    get_revenue_summary,
+    get_transactions,
+)
 
 admin_bp = Blueprint(
     "admin",
@@ -480,6 +484,94 @@ def delete_plan_api(plan_id):
         }), 500
 
 
+@admin_bp.route("/revenue")
+@admin_required
+def revenue():
+    return render_template(
+        "admin/revenue.html",
+        admin_username=session.get("admin_username"),
+    )
+
+
+@admin_bp.route("/revenue/api/summary", methods=["GET"])
+@admin_required
+def revenue_summary_api():
+    try:
+        summary = get_revenue_summary()
+
+        return jsonify({
+            "success": True,
+            "summary": {
+                key: float(value)
+                for key, value in summary.items()
+            },
+        })
+
+    except Exception:
+        current_app.logger.exception(
+            "Admin revenue summary failed"
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Unable to load revenue summary.",
+        }), 500
+
+
+@admin_bp.route("/revenue/api/transactions", methods=["GET"])
+@admin_required
+def revenue_transactions_api():
+    try:
+        status = request.args.get("status", "success")
+        search = request.args.get("search", "").strip()
+        cursor_value = request.args.get("cursor")
+
+        if len(search) > 100:
+            return jsonify({
+                "success": False,
+                "message": "Search query is too long.",
+            }), 400
+
+        before_id = None
+
+        if cursor_value:
+            try:
+                before_id = int(cursor_value)
+                if before_id < 1:
+                    raise ValueError
+            except (TypeError, ValueError):
+                return jsonify({
+                    "success": False,
+                    "message": "Invalid pagination cursor.",
+                }), 400
+
+        result = get_transactions(
+            status=status,
+            limit=15,
+            before_id=before_id,
+            search=search,
+        )
+
+        return jsonify({
+            "success": True,
+            **result,
+        })
+
+    except ValueError as exc:
+        return jsonify({
+            "success": False,
+            "message": str(exc),
+        }), 400
+
+    except Exception:
+        current_app.logger.exception(
+            "Admin transaction listing failed"
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Unable to load transactions.",
+        }), 500
 
 @admin_bp.route("/logout", methods=["POST"])
 @admin_required

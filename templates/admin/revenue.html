@@ -1,0 +1,417 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Revenue Management | StegoSecure{% endblock %}
+{% block page_heading %}Revenue & Transactions{% endblock %}
+
+{% block content %}
+<style>
+    .revenue-heading { margin-bottom: 25px; }
+    .revenue-heading h2 { margin: 0 0 8px; font-size: 23px; }
+    .revenue-heading p { color: #8b9ab4; font-size: 14px; margin: 0; }
+
+    .revenue-cards {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .revenue-card {
+        background: #111a2e;
+        border: 1px solid rgba(0,229,255,.14);
+        border-radius: 12px;
+        padding: 21px;
+        min-width: 0;
+    }
+    .revenue-card-label { color: #8b9ab4; font-size: 12px; margin-bottom: 12px; }
+    .revenue-card-value { color: #fff; font-size: 25px; font-weight: 700; overflow-wrap: anywhere; }
+    .revenue-card.total .revenue-card-value { color: #00e5ff; }
+
+    .transactions-panel {
+        background: #111a2e;
+        border: 1px solid rgba(0,229,255,.14);
+        border-radius: 12px;
+        padding: 22px;
+    }
+    .transactions-heading { margin: 0 0 18px; font-size: 17px; }
+    .transaction-tabs {
+        display: flex;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255,255,255,.09);
+        margin-bottom: 20px;
+        overflow-x: auto;
+    }
+    .transaction-tab {
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        color: #8b9ab4;
+        padding: 12px 17px;
+        margin-bottom: -1px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .transaction-tab:hover { color: #fff; }
+    .transaction-tab.active { color: #00e5ff; border-bottom-color: #00e5ff; }
+
+    .transactions-toolbar { display: flex; gap: 12px; margin-bottom: 20px; }
+    .transaction-search { flex: 1; min-width: 220px; }
+    .transaction-search input {
+        width: 100%; background: #080f20; border: 1px solid #263651;
+        border-radius: 8px; color: #fff; padding: 12px 14px;
+        outline: none; font-size: 13px;
+    }
+    .transaction-search input:focus { border-color: #00e5ff; }
+    .transactions-table-wrapper { width: 100%; overflow-x: auto; }
+    .transactions-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    .transactions-table th {
+        text-align: left; padding: 14px 12px; color: #718096;
+        font-size: 11px; text-transform: uppercase; letter-spacing: .7px;
+        border-bottom: 1px solid rgba(255,255,255,.09); white-space: nowrap;
+    }
+    .transactions-table td {
+        padding: 16px 12px; border-bottom: 1px solid rgba(255,255,255,.06);
+        color: #c4cee0; font-size: 13px; white-space: nowrap;
+    }
+    .transactions-table tbody tr:hover { background: rgba(0,229,255,.025); }
+    .transactions-table tr:last-child td { border-bottom: none; }
+    .transaction-primary { color: #fff; font-weight: 600; }
+    .transaction-secondary { color: #8b9ab4; font-size: 11px; margin-top: 5px; }
+    .transaction-amount { color: #00e5ff !important; font-weight: 700; }
+    .payment-status {
+        display: inline-block; padding: 5px 10px; border-radius: 20px;
+        font-size: 11px; font-weight: 700; text-transform: capitalize;
+    }
+    .payment-status.success { background: rgba(0,220,150,.10); color: #55e6ae; }
+    .payment-status.pending { background: rgba(255,190,70,.12); color: #ffca70; }
+    .payment-status.failed { background: rgba(255,70,70,.12); color: #ff8585; }
+    .loading-state, .empty-state, .error-state {
+        text-align: center; padding: 28px; color: #8b9ab4; font-size: 13px;
+    }
+    .error-state { color: #ff8585; }
+    .transactions-footer {
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 12px; margin-top: 20px; flex-wrap: wrap;
+    }
+    .transactions-count { font-size: 12px; color: #8b9ab4; }
+    .load-more-btn {
+        background: rgba(0,229,255,.10); border: 1px solid rgba(0,229,255,.3);
+        color: #00e5ff; padding: 10px 18px; border-radius: 7px;
+        cursor: pointer; font-size: 12px; font-weight: 600;
+    }
+    .load-more-btn:hover { background: rgba(0,229,255,.18); }
+    .load-more-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    @media(max-width: 1100px) {
+        .revenue-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media(max-width: 600px) {
+        .revenue-cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+        .revenue-card { padding: 15px; }
+        .revenue-card-value { font-size: 20px; }
+        .transactions-panel { padding: 15px; }
+        .transactions-toolbar { flex-direction: column; }
+    }
+</style>
+
+<div class="revenue-heading">
+    <h2>Revenue Overview</h2>
+    <p>Monitor successful payments and review all customer transactions.</p>
+</div>
+
+<section class="revenue-cards" aria-label="Revenue summary">
+    <div class="revenue-card total">
+        <div class="revenue-card-label">Total Revenue</div>
+        <div class="revenue-card-value" id="total-revenue">—</div>
+    </div>
+    <div class="revenue-card">
+        <div class="revenue-card-label">Today's Revenue</div>
+        <div class="revenue-card-value" id="today-revenue">—</div>
+    </div>
+    <div class="revenue-card">
+        <div class="revenue-card-label">Monthly Revenue</div>
+        <div class="revenue-card-value" id="monthly-revenue">—</div>
+    </div>
+    <div class="revenue-card">
+        <div class="revenue-card-label">Quarterly Revenue</div>
+        <div class="revenue-card-value" id="quarterly-revenue">—</div>
+    </div>
+</section>
+
+<section class="transactions-panel">
+    <h3 class="transactions-heading">Transactions</h3>
+
+    <div class="transaction-tabs" role="tablist" aria-label="Transaction status">
+        <button type="button" class="transaction-tab active" data-status="success" role="tab" aria-selected="true">Successful</button>
+        <button type="button" class="transaction-tab" data-status="pending" role="tab" aria-selected="false">Pending</button>
+        <button type="button" class="transaction-tab" data-status="failed" role="tab" aria-selected="false">Failed</button>
+    </div>
+
+    <div class="transactions-toolbar">
+        <div class="transaction-search">
+            <input type="search" id="transaction-search"
+                   placeholder="Search payment ID, order ID, username or email..."
+                   autocomplete="off" maxlength="100">
+        </div>
+    </div>
+
+    <div class="transactions-table-wrapper">
+        <table class="transactions-table">
+            <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>User</th>
+                    <th>Plan</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="transactions-table-body">
+                <tr><td colspan="6" class="loading-state">Loading transactions...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="transactions-footer">
+        <div class="transactions-count" id="transactions-count">Loading...</div>
+        <button type="button" class="load-more-btn" id="load-more-transactions" hidden>Load More</button>
+    </div>
+    <div class="loading-state" id="transactions-loading" hidden>Loading more transactions...</div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const BASE_URL = "{{ url_for('admin.revenue') }}";
+    const SUMMARY_URL = BASE_URL.replace(/\/$/, "") + "/api/summary";
+    const TRANSACTIONS_URL = BASE_URL.replace(/\/$/, "") + "/api/transactions";
+
+    const tableBody = document.getElementById("transactions-table-body");
+    const searchInput = document.getElementById("transaction-search");
+    const countLabel = document.getElementById("transactions-count");
+    const loadMoreButton = document.getElementById("load-more-transactions");
+    const loadingIndicator = document.getElementById("transactions-loading");
+    const tabButtons = Array.from(document.querySelectorAll(".transaction-tab"));
+
+    let currentStatus = "success";
+    let currentSearch = "";
+    let nextCursor = null;
+    let hasMore = true;
+    let loadedCount = 0;
+    let loading = false;
+    let requestNumber = 0;
+    let searchTimer = null;
+
+    function formatMoney(value) {
+        const amount = Number(value || 0);
+        return "₹" + amount.toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function formatDate(value) {
+        if (!value) return "N/A";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "N/A";
+        return date.toLocaleString("en-IN", {
+            day: "2-digit", month: "short", year: "numeric",
+            hour: "2-digit", minute: "2-digit"
+        });
+    }
+
+    async function loadSummary() {
+        try {
+            const response = await fetch(SUMMARY_URL, {
+                credentials: "same-origin",
+                headers: { "Accept": "application/json" }
+            });
+            if (!response.ok) throw new Error("Unable to load revenue summary.");
+            const data = await response.json();
+            if (data.success === false) throw new Error(data.message || "Unable to load revenue summary.");
+            const summary = data.summary || data;
+            document.getElementById("total-revenue").textContent = formatMoney(summary.total_revenue);
+            document.getElementById("today-revenue").textContent = formatMoney(summary.today_revenue);
+            document.getElementById("monthly-revenue").textContent = formatMoney(summary.monthly_revenue);
+            document.getElementById("quarterly-revenue").textContent = formatMoney(summary.quarterly_revenue);
+        } catch (error) {
+            ["total-revenue", "today-revenue", "monthly-revenue", "quarterly-revenue"].forEach(id => {
+                document.getElementById(id).textContent = "Unavailable";
+            });
+        }
+    }
+
+    function addCell(row, value, className) {
+        const cell = document.createElement("td");
+        cell.textContent = value === null || value === undefined || value === "" ? "N/A" : value;
+        if (className) cell.className = className;
+        row.appendChild(cell);
+        return cell;
+    }
+
+    function renderTransaction(item) {
+        const row = document.createElement("tr");
+
+        const paymentCell = document.createElement("td");
+        const paymentPrimary = document.createElement("div");
+        paymentPrimary.className = "transaction-primary";
+        paymentPrimary.textContent = item.payment_id || "Not captured";
+        paymentCell.appendChild(paymentPrimary);
+        const orderSecondary = document.createElement("div");
+        orderSecondary.className = "transaction-secondary";
+        orderSecondary.textContent = "Order: " + (item.razorpay_order_id || "N/A");
+        paymentCell.appendChild(orderSecondary);
+        row.appendChild(paymentCell);
+
+        const userCell = document.createElement("td");
+        const username = document.createElement("div");
+        username.className = "transaction-primary";
+        username.textContent = item.username || "N/A";
+        userCell.appendChild(username);
+        const email = document.createElement("div");
+        email.className = "transaction-secondary";
+        email.textContent = item.email || "N/A";
+        userCell.appendChild(email);
+        row.appendChild(userCell);
+
+        const planCell = document.createElement("td");
+        const planName = document.createElement("div");
+        planName.textContent = item.plan_name || "Credit Plan";
+        planCell.appendChild(planName);
+        if (item.credits_snapshot !== null && item.credits_snapshot !== undefined) {
+            const credits = document.createElement("div");
+            credits.className = "transaction-secondary";
+            credits.textContent = Number(item.credits_snapshot).toLocaleString("en-IN") + " credits";
+            planCell.appendChild(credits);
+        }
+        row.appendChild(planCell);
+
+        addCell(row, formatMoney(item.amount), "transaction-amount");
+        addCell(row, formatDate(item.created_at));
+
+        const statusCell = document.createElement("td");
+        const badge = document.createElement("span");
+        const status = String(item.status || currentStatus).toLowerCase();
+        badge.className = "payment-status " + status;
+        badge.textContent = status;
+        statusCell.appendChild(badge);
+        row.appendChild(statusCell);
+
+        tableBody.appendChild(row);
+    }
+
+    function showMessage(message, className) {
+        tableBody.innerHTML = "";
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 6;
+        cell.className = className;
+        cell.textContent = message;
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+    }
+
+    function updateFooter() {
+        countLabel.textContent = loadedCount + " transactions loaded";
+        loadMoreButton.hidden = !hasMore || loadedCount === 0;
+        loadMoreButton.disabled = loading;
+        loadMoreButton.textContent = loading ? "Loading..." : "Load More";
+    }
+
+    async function loadTransactions(reset) {
+        if (loading || (!reset && !hasMore)) return;
+        loading = true;
+        const thisRequest = requestNumber;
+
+        if (reset) {
+            loadedCount = 0;
+            nextCursor = null;
+            hasMore = true;
+            tableBody.innerHTML = "";
+            countLabel.textContent = "Loading...";
+        }
+
+        loadingIndicator.hidden = false;
+        updateFooter();
+
+        const params = new URLSearchParams();
+        params.set("status", currentStatus);
+        params.set("search", currentSearch);
+        if (nextCursor !== null) params.set("cursor", nextCursor);
+
+        try {
+            const response = await fetch(TRANSACTIONS_URL + "?" + params.toString(), {
+                method: "GET",
+                credentials: "same-origin",
+                headers: { "Accept": "application/json" }
+            });
+            if (!response.ok) throw new Error("Unable to load transactions.");
+            const data = await response.json();
+            if (!data.success) throw new Error(data.message || "Unable to load transactions.");
+            if (thisRequest !== requestNumber) return;
+
+            const transactions = data.transactions || [];
+            if (reset && transactions.length === 0) {
+                showMessage("No " + currentStatus + " transactions found.", "empty-state");
+            } else {
+                transactions.forEach(renderTransaction);
+            }
+            loadedCount += transactions.length;
+            nextCursor = data.next_cursor ?? null;
+            hasMore = Boolean(data.has_more);
+            updateFooter();
+        } catch (error) {
+            if (thisRequest === requestNumber) {
+                if (loadedCount === 0) showMessage(error.message, "error-state");
+                else countLabel.textContent = "Unable to load more transactions. Please try again.";
+            }
+        } finally {
+            if (thisRequest === requestNumber) {
+                loading = false;
+                loadingIndicator.hidden = true;
+                updateFooter();
+            }
+        }
+    }
+
+    function resetAndLoad() {
+        requestNumber++;
+        loading = false;
+        loadingIndicator.hidden = true;
+        loadTransactions(true);
+    }
+
+    tabButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            currentStatus = button.dataset.status;
+            tabButtons.forEach(tab => {
+                const active = tab === button;
+                tab.classList.toggle("active", active);
+                tab.setAttribute("aria-selected", active ? "true" : "false");
+            });
+            searchInput.value = "";
+            currentSearch = "";
+            clearTimeout(searchTimer);
+            resetAndLoad();
+        });
+    });
+
+    searchInput.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+            currentSearch = searchInput.value.trim();
+            resetAndLoad();
+        }, 350);
+    });
+
+    loadMoreButton.addEventListener("click", function () {
+        loadTransactions(false);
+    });
+
+    loadSummary();
+    loadTransactions(true);
+});
+</script>
+{% endblock %}
