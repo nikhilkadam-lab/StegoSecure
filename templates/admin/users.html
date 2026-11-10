@@ -1,0 +1,962 @@
+
+{% extends "admin/base.html" %}
+
+{% block title %}User Management | StegoSecure{% endblock %}
+{% block page_heading %}User Management{% endblock %}
+
+{% block content %}
+
+<style>
+    .users-heading {
+        margin-bottom: 25px;
+    }
+
+    .users-heading h2 {
+        margin: 0 0 8px;
+        font-size: 23px;
+    }
+
+    .users-heading p {
+        color: #8b9ab4;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .users-panel {
+        background: #111a2e;
+        border: 1px solid rgba(0,229,255,.14);
+        border-radius: 12px;
+        padding: 22px;
+    }
+
+    .users-toolbar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+    }
+
+    .users-search {
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .users-search input,
+    .users-toolbar select {
+        width: 100%;
+        background: #080f20;
+        border: 1px solid #263651;
+        border-radius: 8px;
+        color: #fff;
+        padding: 12px 14px;
+        outline: none;
+        font-size: 13px;
+    }
+
+    .users-search input:focus,
+    .users-toolbar select:focus {
+        border-color: #00e5ff;
+    }
+
+    .users-toolbar select {
+        width: 180px;
+        cursor: pointer;
+    }
+
+    .users-table-wrapper {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 950px;
+    }
+
+    .users-table th {
+        text-align: left;
+        padding: 14px 12px;
+        color: #718096;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+        border-bottom: 1px solid rgba(255,255,255,.09);
+        white-space: nowrap;
+    }
+
+    .users-table td {
+        padding: 16px 12px;
+        border-bottom: 1px solid rgba(255,255,255,.06);
+        color: #c4cee0;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .users-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .users-table tbody tr:hover {
+        background: rgba(0,229,255,.025);
+    }
+
+    .user-name {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .user-email {
+        color: #8b9ab4;
+    }
+
+    .account-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .account-status.active {
+        background: rgba(0,220,150,.10);
+        color: #55e6ae;
+    }
+
+    .account-status.disabled {
+        background: rgba(255,70,70,.12);
+        color: #ff8585;
+    }
+
+    .credit-value {
+        color: #00e5ff;
+        font-weight: 700;
+    }
+
+    .loading-state,
+    .empty-state,
+    .error-state {
+        text-align: center;
+        padding: 28px;
+        color: #8b9ab4;
+        font-size: 13px;
+    }
+
+    .error-state {
+        color: #ff8585;
+    }
+
+    .users-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .users-count {
+        font-size: 12px;
+        color: #8b9ab4;
+    }
+
+    .load-more-btn {
+        background: rgba(0,229,255,.10);
+        border: 1px solid rgba(0,229,255,.3);
+        color: #00e5ff;
+        padding: 10px 18px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .load-more-btn:hover {
+        background: rgba(0,229,255,.18);
+    }
+
+    .load-more-btn:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+
+    #scroll-sentinel {
+        height: 10px;
+    }
+
+
+.manage-modal[hidden] {
+    display: none;
+}
+
+.manage-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.manage-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+}
+
+.manage-modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 430px;
+    background: #111a2e;
+    border: 1px solid rgba(0,229,255,.25);
+    border-radius: 13px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+
+.manage-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 22px;
+}
+
+.manage-modal-header h3 {
+    margin: 0 0 7px;
+}
+
+.manage-modal-header p,
+.manage-section p {
+    color: #8b9ab4;
+    font-size: 13px;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #8b9ab4;
+    font-size: 27px;
+    cursor: pointer;
+}
+
+.manage-section {
+    padding: 17px 0;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.manage-section h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+}
+
+.manage-section label {
+    display: block;
+    color: #8b9ab4;
+    font-size: 12px;
+    margin: 14px 0 7px;
+}
+
+.manage-section input {
+    width: 100%;
+    padding: 12px;
+    background: #080f20;
+    border: 1px solid #263651;
+    border-radius: 7px;
+    color: white;
+    outline: none;
+}
+
+.manage-section input:focus {
+    border-color: #00e5ff;
+}
+
+.manage-action-btn {
+    display: block;
+    width: 100%;
+    margin-top: 13px;
+    padding: 11px;
+    border: 1px solid rgba(0,229,255,.3);
+    background: rgba(0,229,255,.1);
+    color: #00e5ff;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.manage-action-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+#manage-feedback {
+    font-size: 13px;
+    color: #55e6ae;
+    margin-top: 12px;
+}
+
+#manage-feedback.error {
+    color: #ff8585;
+}
+
+
+    @media(max-width: 600px) {
+        .users-panel {
+            padding: 15px;
+        }
+
+        .users-toolbar {
+            flex-direction: column;
+        }
+
+        .users-toolbar select {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="users-heading">
+    <h2>Registered Users</h2>
+    <p>Manage registered accounts and monitor their encryption credits.</p>
+</div>
+
+<div class="users-panel">
+
+    <!-- SEARCH AND FILTER -->
+
+    <div class="users-toolbar">
+
+        <div class="users-search">
+            <input
+                type="search"
+                id="user-search"
+                placeholder="Search username or email..."
+                autocomplete="off"
+            >
+        </div>
+
+        <select id="status-filter">
+            <option value="all">All Accounts</option>
+            <option value="active">Active Accounts</option>
+            <option value="disabled">Disabled Accounts</option>
+        </select>
+
+    </div>
+
+    <!-- USER TABLE -->
+
+    <div class="users-table-wrapper">
+
+        <table class="users-table">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Registration Date</th>
+                    <th>Remaining Credits</th>
+                    <th>Purchased Credits</th>
+                    <th>Account Status</th>
+                    <th>Manage</th>
+                </tr>
+            </thead>
+
+            <tbody id="users-table-body">
+                <tr>
+                    <td colspan="7" class="loading-state">
+                        Loading users...
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- LOADING / SEARCH PAGINATION -->
+
+    <div class="users-footer">
+
+        <div class="users-count" id="users-count">
+            Loading...
+        </div>
+
+        <button
+            type="button"
+            class="load-more-btn"
+            id="load-more-search"
+            hidden
+        >
+            Load More Results
+        </button>
+
+    </div>
+
+    <!-- INFINITE SCROLL SENTINEL -->
+
+    <div id="scroll-sentinel"></div>
+
+    <div id="loading-indicator"
+         class="loading-state"
+         hidden>
+        Loading more users...
+    </div>
+
+</div>
+
+<!-- MANAGE USER MODAL -->
+
+<div id="manage-user-modal" class="manage-modal" hidden>
+
+    <div class="manage-modal-backdrop"></div>
+
+    <div class="manage-modal-content">
+
+        <div class="manage-modal-header">
+            <div>
+                <h3>Manage User</h3>
+                <p id="manage-user-name"></p>
+            </div>
+
+            <button type="button" id="close-manage-modal"
+                    class="modal-close">&times;</button>
+        </div>
+
+        <div class="manage-section">
+            <h4>Account Status</h4>
+            <p id="manage-user-status"></p>
+
+            <button type="button" id="toggle-user-status"
+                    class="manage-action-btn">
+                Disable Account
+            </button>
+        </div>
+
+        <div class="manage-section">
+            <h4>Edit Remaining Credits</h4>
+
+            <label for="edit-credits">New credit balance</label>
+
+            <input type="number"
+                   id="edit-credits"
+                   min="0"
+                   max="100000000"
+                   step="1">
+
+            <button type="button" id="save-user-credits"
+                    class="manage-action-btn">
+                Save Credits
+            </button>
+        </div>
+
+        <p id="manage-feedback" role="status"></p>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const API_URL = "{{ url_for('admin.users_api') }}";
+
+    const tableBody = document.getElementById("users-table-body");
+    const searchInput = document.getElementById("user-search");
+    const statusFilter = document.getElementById("status-filter");
+    const usersCount = document.getElementById("users-count");
+    const loadMoreButton = document.getElementById("load-more-search");
+    const loadingIndicator = document.getElementById("loading-indicator");
+    const sentinel = document.getElementById("scroll-sentinel");
+
+    let usersLoaded = 0;
+    let nextCursor = null;
+    let hasMore = true;
+    let loading = false;
+    let currentSearch = "";
+    let currentStatus = "all";
+    let searchTimer = null;
+    let requestNumber = 0;
+
+    const manageModal = document.getElementById("manage-user-modal");
+    const manageUserName = document.getElementById("manage-user-name");
+    const manageUserStatus = document.getElementById("manage-user-status");
+    const toggleStatusButton = document.getElementById("toggle-user-status");
+    const editCreditsInput = document.getElementById("edit-credits");
+    const saveCreditsButton = document.getElementById("save-user-credits");
+    const closeModalButton = document.getElementById("close-manage-modal");
+    const manageFeedback = document.getElementById("manage-feedback");
+
+    let selectedUser = null;
+    let selectedUserRow = null;
+
+    function isSearchMode() {
+        return currentSearch.length > 0;
+    }
+
+    function formatDate(value) {
+        if (!value) return "N/A";
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) return "N/A";
+
+        return date.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+    }
+
+    function createCell(value, className = "") {
+        const cell = document.createElement("td");
+        cell.textContent = value ?? "N/A";
+
+        if (className) {
+            cell.className = className;
+        }
+
+        return cell;
+    }
+
+    function renderUser(user) {
+
+        const row = document.createElement("tr");
+
+        row.appendChild(createCell(user.id));
+        row.dataset.userId = String(user.id);
+
+        row.appendChild(
+            createCell(user.username, "user-name")
+        );
+
+        row.appendChild(
+            createCell(user.email, "user-email")
+        );
+
+        row.appendChild(
+            createCell(formatDate(user.created_at))
+        );
+
+        row.appendChild(
+            createCell(user.remaining_credits, "credit-value")
+        );
+
+        row.appendChild(
+            createCell(user.total_purchased_credits, "credit-value")
+        );
+
+        const statusCell = document.createElement("td");
+
+        const statusBadge = document.createElement("span");
+
+        statusBadge.className =
+            "account-status " +
+            (user.is_active ? "active" : "disabled");
+
+        statusBadge.textContent =
+            user.is_active ? "Active" : "Disabled";
+
+        statusCell.appendChild(statusBadge);
+        row.appendChild(statusCell);
+
+        // Manage button
+        const manageCell = document.createElement("td");
+
+        const manageButton = document.createElement("button");
+        manageButton.type = "button";
+        manageButton.className = "load-more-btn";
+        manageButton.textContent = "Manage";
+
+        manageButton.addEventListener("click", function () {
+            openManageModal(user);
+        });
+
+        manageCell.appendChild(manageButton);
+        row.appendChild(manageCell);
+
+        tableBody.appendChild(row);
+    }
+
+    function showMessage(message, className) {
+
+        tableBody.innerHTML = "";
+
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 8;
+        cell.className = className;
+        cell.textContent = message;
+
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+    }
+
+    function updateFooter() {
+
+        usersCount.textContent =
+            usersLoaded + " users loaded";
+
+        loadMoreButton.hidden =
+            !isSearchMode() || !hasMore;
+
+        loadMoreButton.disabled = loading;
+        loadMoreButton.textContent =
+            loading ? "Loading..." : "Load More Results";
+    }
+
+    async function loadUsers(reset = false) {
+
+        if (loading) return;
+
+        if (!reset && !hasMore) return;
+
+        loading = true;
+
+        const thisRequest = requestNumber;
+
+        if (reset) {
+            usersLoaded = 0;
+            nextCursor = null;
+            hasMore = true;
+
+            tableBody.innerHTML = "";
+
+            usersCount.textContent = "Loading...";
+        }
+
+        loadingIndicator.hidden = false;
+
+        updateFooter();
+
+        const params = new URLSearchParams();
+
+        params.set("search", currentSearch);
+        params.set("status", currentStatus);
+
+        if (nextCursor !== null) {
+            params.set("cursor", nextCursor);
+        }
+
+        try {
+
+            const response = await fetch(
+                API_URL + "?" + params.toString(),
+                {
+                    method: "GET",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Unable to load users.");
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(
+                    data.message || "Unable to load users."
+                );
+            }
+
+            // Ignore outdated responses after search/filter changes.
+            if (thisRequest !== requestNumber) return;
+
+            if (reset && data.users.length === 0) {
+                showMessage(
+                    "No users found matching your criteria.",
+                    "empty-state"
+                );
+            } else {
+
+                data.users.forEach(renderUser);
+
+            }
+
+            usersLoaded += data.users.length;
+
+            nextCursor = data.next_cursor;
+            hasMore = data.has_more;
+
+            updateFooter();
+
+        } catch (error) {
+
+            if (thisRequest === requestNumber) {
+
+                if (usersLoaded === 0) {
+                    showMessage(
+                        error.message,
+                        "error-state"
+                    );
+                } else {
+                    usersCount.textContent =
+                        "Unable to load more users. Please try again.";
+                }
+
+            }
+
+        } finally {
+
+            if (thisRequest === requestNumber) {
+
+                loading = false;
+                loadingIndicator.hidden = true;
+
+                updateFooter();
+
+            }
+
+        }
+    }
+
+    function resetAndLoad() {
+
+        requestNumber++;
+
+        loading = false;
+        loadingIndicator.hidden = true;
+
+        loadUsers(true);
+    }
+
+    // Debounced server-side search.
+    searchInput.addEventListener("input", function () {
+
+        clearTimeout(searchTimer);
+
+        searchTimer = setTimeout(function () {
+
+            currentSearch = searchInput.value.trim();
+
+            resetAndLoad();
+
+        }, 350);
+
+    });
+
+    // Account status filtering.
+    statusFilter.addEventListener("change", function () {
+
+        currentStatus = statusFilter.value;
+
+        resetAndLoad();
+
+    });
+
+    // Search results use an explicit button,
+    // not automatic infinite scrolling.
+    loadMoreButton.addEventListener("click", function () {
+
+        if (isSearchMode()) {
+            loadUsers(false);
+        }
+
+    });
+
+    // Infinite scrolling applies only to normal browsing.
+    const observer = new IntersectionObserver(function (entries) {
+
+        if (
+            entries[0].isIntersecting &&
+            !isSearchMode() &&
+            hasMore &&
+            !loading
+        ) {
+            loadUsers(false);
+        }
+
+    }, {
+        root: null,
+        rootMargin: "300px",
+        threshold: 0
+    });
+
+    observer.observe(sentinel);
+
+
+
+function showManageFeedback(message, isError = false) {
+    manageFeedback.textContent = message;
+    manageFeedback.classList.toggle("error", isError);
+}
+
+function openManageModal(user) {
+    selectedUser = user;
+
+    selectedUserRow = Array.from(
+        tableBody.querySelectorAll("tr")
+    ).find(row => row.dataset.userId === String(user.id));
+
+    manageUserName.textContent =
+        user.username + " · " + user.email;
+
+    manageUserStatus.textContent =
+        user.is_active ? "Account is currently active." :
+        "Account is currently disabled.";
+
+    toggleStatusButton.textContent =
+        user.is_active ? "Disable Account" : "Enable Account";
+
+    editCreditsInput.value = user.remaining_credits;
+
+    showManageFeedback("");
+    manageModal.hidden = false;
+}
+
+function closeManageModal() {
+    manageModal.hidden = true;
+    selectedUser = null;
+    selectedUserRow = null;
+}
+
+closeModalButton.addEventListener("click", closeManageModal);
+
+manageModal.querySelector(".manage-modal-backdrop")
+    .addEventListener("click", closeManageModal);
+
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape" && !manageModal.hidden) {
+        closeManageModal();
+    }
+});
+
+async function sendManageRequest(url, payload) {
+    const response = await fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-CSRFToken": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+        throw new Error(data.message || "Operation failed.");
+    }
+
+    return data;
+}
+
+// Enable / Disable account
+toggleStatusButton.addEventListener("click", async function() {
+    if (!selectedUser) return;
+
+    const newStatus = !selectedUser.is_active;
+
+    const action = newStatus ? "enable" : "disable";
+
+    if (!confirm(
+        "Are you sure you want to " + action +
+        " this account?"
+    )) return;
+
+    toggleStatusButton.disabled = true;
+
+    try {
+        const data = await sendManageRequest(
+            "{{ url_for('admin.update_user_status_api', user_id=0) }}"
+                .replace("/0/", "/" + selectedUser.id + "/"),
+            { is_active: newStatus }
+        );
+
+        selectedUser.is_active = data.is_active;
+
+        if (selectedUserRow) {
+            const statusBadge = selectedUserRow.querySelector(
+                ".account-status"
+            );
+
+            statusBadge.className =
+                "account-status " +
+                (data.is_active ? "active" : "disabled");
+
+            statusBadge.textContent =
+                data.is_active ? "Active" : "Disabled";
+        }
+
+        manageUserStatus.textContent =
+            data.is_active ? "Account is currently active." :
+            "Account is currently disabled.";
+
+        toggleStatusButton.textContent =
+            data.is_active ? "Disable Account" : "Enable Account";
+
+        showManageFeedback(data.message);
+
+    } catch (error) {
+        showManageFeedback(error.message, true);
+    } finally {
+        toggleStatusButton.disabled = false;
+    }
+});
+
+// Edit remaining credits
+saveCreditsButton.addEventListener("click", async function() {
+    if (!selectedUser) return;
+
+    const value = editCreditsInput.value.trim();
+
+    if (!/^\d+$/.test(value)) {
+        showManageFeedback(
+            "Enter a valid whole-number credit balance.",
+            true
+        );
+        return;
+    }
+
+    const credits = Number(value);
+
+    if (!Number.isSafeInteger(credits) || credits > 100000000) {
+        showManageFeedback("Invalid credit balance.", true);
+        return;
+    }
+
+    if (!confirm(
+        "Set remaining credits to " + credits + "?"
+    )) return;
+
+    saveCreditsButton.disabled = true;
+
+    try {
+        const data = await sendManageRequest(
+            "{{ url_for('admin.update_user_credits_api', user_id=0) }}"
+                .replace("/0/", "/" + selectedUser.id + "/"),
+            { remaining_credits: credits }
+        );
+
+        selectedUser.remaining_credits = data.remaining_credits;
+
+        if (selectedUserRow) {
+            selectedUserRow.cells[4].textContent =
+                data.remaining_credits;
+        }
+
+        showManageFeedback(data.message);
+
+    } catch (error) {
+        showManageFeedback(error.message, true);
+    } finally {
+        saveCreditsButton.disabled = false;
+    }
+});
+
+
+
+    // Initial batch.
+    loadUsers(true);
+
+});
+</script>
+
+{% endblock %}

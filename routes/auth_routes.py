@@ -101,11 +101,13 @@ def login():
         try:
             user = authenticate_user(email, password)
 
-            session.clear()
+            session.pop("user_id", None)
+            session.pop("username", None)
+            session.pop("email", None)
+
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             session["email"] = user["email"]
-
             # Only allow local relative destinations.
             if (
                 next_url.startswith("/")
@@ -156,7 +158,10 @@ def profile():
         user = get_user_profile(session["user_id"])
 
         if not user:
-            session.clear()
+            session.pop("user_id", None)
+            session.pop("username", None)
+            session.pop("email", None)
+
             flash("Your account could not be found. Please log in again.", "error")
             return redirect(url_for("auth.login"))
 
@@ -243,6 +248,9 @@ def change_password():
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
-    session.clear()
+    session.pop("user_id", None)
+    session.pop("username", None)
+    session.pop("email", None)
+
     flash("You have been logged out.", "success")
     return redirect(url_for("auth.login"))

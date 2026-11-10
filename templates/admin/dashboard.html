@@ -1,37 +1,393 @@
+
 {% extends "admin/base.html" %}
 
 {% block title %}Admin Dashboard | StegoSecure{% endblock %}
-
 {% block page_heading %}Dashboard{% endblock %}
 
 {% block content %}
 
-<div class="card">
+<style>
+    .dashboard-heading {
+        margin-bottom: 25px;
+    }
 
-    <h2 style="margin-top:0;">Welcome, {{ admin_username }}!</h2>
+    .dashboard-heading h2 {
+        margin: 0 0 8px;
+        font-size: 23px;
+    }
 
-    <p class="muted">
-        You are successfully logged in to the StegoSecure administration panel.
-    </p>
+    .dashboard-heading p {
+        margin: 0;
+        color: #8b9ab4;
+        font-size: 14px;
+    }
 
-    <div style="
-        margin-top:25px;
-        padding:18px;
-        background:rgba(0,229,255,.06);
-        border:1px solid rgba(0,229,255,.15);
-        border-radius:9px;
-    ">
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 25px;
+    }
 
-        <h3 style="color:#00e5ff;margin-top:0;">
-            Admin Panel Setup
-        </h3>
+    .stat-card {
+        background: #111a2e;
+        border: 1px solid rgba(0,229,255,.14);
+        border-radius: 12px;
+        padding: 22px;
+        min-width: 0;
+    }
 
-        <p class="muted">
-            Your admin authentication is working. We will now build the
-            dashboard statistics, user management, credit plans,
-            revenue and system settings.
-        </p>
+    .stat-label {
+        color: #8b9ab4;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
 
+    .stat-value {
+        font-size: 25px;
+        font-weight: 800;
+        color: #fff;
+        overflow-wrap: anywhere;
+    }
+
+    .stat-note {
+        font-size: 12px;
+        color: #718096;
+        margin-top: 10px;
+    }
+
+    .stat-icon {
+        color: #00e5ff;
+        font-size: 20px;
+        margin-bottom: 13px;
+    }
+
+    .section-card {
+        background: #111a2e;
+        border: 1px solid rgba(0,229,255,.14);
+        border-radius: 12px;
+        padding: 22px;
+        margin-bottom: 25px;
+        min-width: 0;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 12px;
+    }
+
+    .section-header h3 {
+        font-size: 17px;
+        margin: 0;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 650px;
+        font-size: 13px;
+    }
+
+    .dashboard-table th {
+        text-align: left;
+        color: #718096;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+        padding: 13px 12px;
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        white-space: nowrap;
+    }
+
+    .dashboard-table td {
+        padding: 15px 12px;
+        border-bottom: 1px solid rgba(255,255,255,.06);
+        color: #c4cee0;
+        white-space: nowrap;
+    }
+
+    .dashboard-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .dashboard-table tbody tr:hover {
+        background: rgba(0,229,255,.025);
+    }
+
+    .status {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: capitalize;
+    }
+
+    .status.success {
+        color: #55e6ae;
+        background: rgba(0,220,150,.10);
+    }
+
+    .status.pending {
+        color: #ffd166;
+        background: rgba(255,209,102,.10);
+    }
+
+    .status.failed {
+        color: #ff8585;
+        background: rgba(255,70,70,.10);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 28px !important;
+        color: #718096 !important;
+    }
+
+    .activity-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .plan-highlight {
+        color: #00e5ff;
+    }
+
+    @media(max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media(max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            padding: 16px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+        }
+
+        .activity-grid {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+
+    @media(max-width: 420px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard-heading">
+    <h2>Welcome, {{ admin_username }}!</h2>
+    <p>Here's an overview of your StegoSecure platform.</p>
+</div>
+
+<!-- PRIMARY STATISTICS -->
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <div class="stat-icon">₹</div>
+        <div class="stat-label">All-Time Revenue</div>
+        <div class="stat-value">
+            ₹{{ "%.2f"|format(statistics.all_time_revenue|float) }}
+        </div>
+        <div class="stat-note">Successful payments only</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">↗</div>
+        <div class="stat-label">Today's Revenue</div>
+        <div class="stat-value">
+            ₹{{ "%.2f"|format(statistics.today_revenue|float) }}
+        </div>
+        <div class="stat-note">Successful payments today</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">▣</div>
+        <div class="stat-label">Monthly Revenue</div>
+        <div class="stat-value">
+            ₹{{ "%.2f"|format(statistics.monthly_revenue|float) }}
+        </div>
+        <div class="stat-note">Current calendar month</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">♙</div>
+        <div class="stat-label">Registered Users</div>
+        <div class="stat-value">
+            {{ statistics.total_users }}
+        </div>
+        <div class="stat-note">Total registered accounts</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">✓</div>
+        <div class="stat-label">Successful Payments</div>
+        <div class="stat-value">
+            {{ statistics.successful_payments }}
+        </div>
+        <div class="stat-note">Verified successful payments</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">✦</div>
+        <div class="stat-label">Total Credits Sold</div>
+        <div class="stat-value">
+            {{ statistics.total_credits_sold }}
+        </div>
+        <div class="stat-note">Credits from successful payments</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">★</div>
+        <div class="stat-label">Most Purchased Plan</div>
+        <div class="stat-value plan-highlight"
+             style="font-size:20px;">
+            {% if statistics.most_purchased_plan %}
+                {{ statistics.most_purchased_plan.plan_name or 'N/A' }}
+            {% else %}
+                No purchases yet
+            {% endif %}
+        </div>
+        <div class="stat-note">
+            {% if statistics.most_purchased_plan %}
+                {{ statistics.most_purchased_plan.purchase_count }} successful purchases
+            {% else %}
+                Waiting for first purchase
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- RECENT TRANSACTIONS -->
+
+<div class="section-card">
+
+    <div class="section-header">
+        <h3>Recent Transactions</h3>
+        <span class="muted" style="font-size:12px;">Latest 5 payments</span>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="dashboard-table">
+
+            <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>User</th>
+                    <th>Plan</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for payment in recent_transactions %}
+                <tr>
+                    <td>{{ payment.id }}</td>
+
+                    <td>{{ payment.username }}</td>
+
+                    <td>{{ payment.plan_name }}</td>
+
+                    <td>
+                        ₹{{ "%.2f"|format(payment.amount|float) }}
+                    </td>
+
+                    <td>
+                        <span class="status
+                            {% if payment.status == 'success' %}success
+                            {% elif payment.status == 'pending' %}pending
+                            {% else %}failed{% endif %}">
+                            {{ payment.status }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ payment.created_at.strftime('%d %b %Y') if payment.created_at else 'N/A' }}
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        No transactions available yet.
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- RECENT REGISTRATIONS -->
+
+<div class="section-card">
+
+    <div class="section-header">
+        <h3>Recent Registrations</h3>
+        <span class="muted" style="font-size:12px;">Latest 5 users</span>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="dashboard-table">
+
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Registration Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for user in recent_users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {{ user.created_at.strftime('%d %b %Y') if user.created_at else 'N/A' }}
+                    </td>
+                </tr>
+
+                {% else %}
+                <tr>
+                    <td colspan="4" class="empty-state">
+                        No registered users available.
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
     </div>
 
 </div>

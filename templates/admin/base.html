@@ -178,7 +178,10 @@
         Dashboard
     </a>
 
-    <div class="nav-link disabled">Users — Coming next</div>
+    <a href="{{ url_for('admin.users') }}"
+   class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+    Users
+</a>
     <div class="nav-link disabled">Credit Plans — Coming next</div>
     <div class="nav-link disabled">Revenue — Coming next</div>
     <div class="nav-link disabled">System Settings — Coming next</div>
