@@ -430,14 +430,18 @@ def download_previous_image(image_id):
         return redirect(url_for("previous_images"))
 
     try:
-        image_path = get_encrypted_image_path(record["image_path"])
+        image_data = get_encrypted_image_path(record["image_path"])
 
-        if image_path is None:
+        if image_data is None:
             flash("The encrypted image file is no longer available.", "error")
             return redirect(url_for("previous_images"))
 
+        if isinstance(image_data, bytes):
+            image_data = BytesIO(image_data)
+            image_data.seek(0)
+
         response = send_file(
-            image_path,
+            image_data,
             mimetype="image/png",
             as_attachment=True,
             download_name=record["output_filename"] or "encrypted_image.png",
@@ -465,13 +469,17 @@ def previous_image_file(image_id):
         }), 404
 
     try:
-        image_path = get_encrypted_image_path(record["image_path"])
+        image_data = get_encrypted_image_path(record["image_path"])
 
-        if image_path is None:
+        if image_data is None:
             return jsonify({"error": "Image file is unavailable."}), 404
 
+        if isinstance(image_data, bytes):
+            image_data = BytesIO(image_data)
+            image_data.seek(0)
+
         response = send_file(
-            image_path,
+            image_data,
             mimetype="image/png",
             as_attachment=False,
             max_age=0,
