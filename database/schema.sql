@@ -111,3 +111,30 @@ CREATE TABLE IF NOT EXISTS site_settings (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS otp_challenges (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    email VARCHAR(254) NOT NULL,
+    purpose VARCHAR(40) NOT NULL,
+    otp_hash VARCHAR(255) NOT NULL,
+
+    pending_username VARCHAR(50) DEFAULT NULL,
+    pending_password_hash VARCHAR(255) DEFAULT NULL,
+
+    expires_at DATETIME NOT NULL,
+    attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    send_count TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    last_sent_at DATETIME NOT NULL,
+
+    verified_at DATETIME DEFAULT NULL,
+    consumed_at DATETIME DEFAULT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id),
+    KEY idx_otp_email_purpose (email, purpose),
+    KEY idx_otp_expiry (expires_at),
+    KEY idx_otp_created (created_at)
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_0900_ai_ci;

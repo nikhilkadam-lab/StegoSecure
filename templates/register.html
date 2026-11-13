@@ -227,94 +227,74 @@ input:disabled {
             </p>
         </header>
 
-        <form id="registerForm"
-            method="post"
-            action="{{ url_for('auth.register') }}">
+<form id="registerForm"
+      method="post"
+      action="{{ url_for('auth.register') }}">
 
-            <input type="hidden"
-                   name="csrf_token"
-                   value="{{ csrf_token() }}">
+    <input type="hidden"
+           name="csrf_token"
+           value="{{ csrf_token() }}">
 
-            <div class="form-group">
-                <label for="username">Full Name</label>
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    value="{{ form_data.username|default('', true) }}"
-                    placeholder="Enter your full name"
-                    minlength="2"
-                    maxlength="50"
-                    autocomplete="name"
-                    required>
-                    <small id="name-message" class="hint" aria-live="polite"></small>
+    {% if not otp_sent %}
+
+        <input type="hidden" name="action" value="send_otp">
+
+        <div class="form-group">
+            <label for="username">Full Name</label>
+            <input
+                type="text"
+                id="username"
+                name="username"
+                value="{{ form_data.username|default('', true) }}"
+                placeholder="Enter your full name"
+                minlength="2"
+                maxlength="50"
+                autocomplete="name"
+                required>
+            <small id="name-message" class="hint" aria-live="polite"></small>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                value="{{ form_data.email|default('', true) }}"
+                placeholder="Enter your email address"
+                maxlength="254"
+                autocomplete="email"
+                required>
+            <small id="email-message" class="hint" aria-live="polite"></small>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Create a strong password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                required>
+
+            <small class="hint">
+                Minimum 8 characters, with at least one uppercase
+                letter, one number, and one special character.
+            </small>
+
+            <div id="password-rules" class="hint"
+                 aria-live="polite"
+                 style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+                <div id="rule-length">✗ At least 8 characters</div>
+                <div id="rule-uppercase">✗ At least one uppercase letter</div>
+                <div id="rule-number">✗ At least one number</div>
+                <div id="rule-special">✗ At least one special character</div>
             </div>
 
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value="{{ form_data.email|default('', true) }}"
-                    placeholder="Enter your email address"
-                    maxlength="254"
-                    autocomplete="email"
-                    required>
-                    <small id="email-message" class="hint" aria-live="polite"></small>
-            </div>
-
-            <section class="otp-section"
-                     aria-label="Future email OTP verification">
-
-                <span class="coming-soon">COMING SOON</span>
-
-                <label for="otp">Email OTP Verification</label>
-
-                <input
-                    type="text"
-                    id="otp"
-                    placeholder="OTP verification not available yet"
-                    disabled
-                    aria-disabled="true">
-
-                <small class="hint">
-                    Email verification will be added in a future
-                    update. This section is currently inactive.
-                </small>
-
-                <button
-                    type="button"
-                    class="btn btn-disabled"
-                    disabled>
-                    Send OTP
-                </button>
-            </section>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Create a strong password"
-                    minlength="8"
-                    maxlength="128"
-                    autocomplete="new-password"
-                    required>
-
-                <small class="hint">
-                    Minimum 8 characters, with at least one uppercase
-                    letter, one number, and one special character.
-                </small>
-                <div id="password-rules" class="hint" aria-live="polite" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
-                    <div id="rule-length">✗ At least 8 characters</div>
-                    <div id="rule-uppercase">✗ At least one uppercase letter</div>
-                    <div id="rule-number">✗ At least one number</div>
-                    <div id="rule-special">✗ At least one special character</div>
-                </div>
-                <div class="form-group" style="margin-top: 1.3rem;">
+            <div class="form-group" style="margin-top: 1.3rem;">
                 <label for="confirm_password">Confirm Password</label>
                 <input
                     type="password"
@@ -324,17 +304,53 @@ input:disabled {
                     minlength="8"
                     maxlength="128"
                     autocomplete="new-password"
-                    required
-                >
-                <small id="password-match-message" class="hint" aria-live="polite"></small>
+                    required>
+                <small id="password-match-message"
+                       class="hint"
+                       aria-live="polite"></small>
             </div>
-            </div>
+        </div>
 
-            <button id="create-account-btn" type="submit"
-                    class="btn btn-primary" disabled>
-                Create Account
-            </button>
-        </form>
+        <button id="create-account-btn"
+                type="submit"
+                class="btn btn-primary"
+                disabled>
+            Send Verification Code
+        </button>
+
+    {% else %}
+
+        <input type="hidden" name="action" value="verify_otp">
+        <input type="hidden" name="email"
+               value="{{ form_data.email }}">
+
+        <section class="otp-section">
+            <label for="otp">Email Verification Code</label>
+
+            <input
+                type="text"
+                id="otp"
+                name="otp"
+                placeholder="Enter 6-digit OTP"
+                inputmode="numeric"
+                pattern="[0-9]{6}"
+                maxlength="6"
+                autocomplete="one-time-code"
+                required>
+
+            <small class="hint">
+                Enter the 6-digit code sent to
+                <strong>{{ form_data.email }}</strong>.
+                The code expires in 5 minutes.
+            </small>
+        </section>
+
+        <button type="submit" class="btn btn-primary">
+            Verify OTP & Create Account
+        </button>
+
+    {% endif %}
+</form>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
@@ -355,6 +371,7 @@ input:disabled {
 {% endblock %}
 
 {% block extra_js %}
+{% if not otp_sent %}
 <script>
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -561,5 +578,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateButton();
 });
+
+
 </script>
+{% else %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const otp = document.getElementById("otp");
+
+    otp.addEventListener("input", () => {
+        otp.value = otp.value.replace(/\D/g, "").slice(0, 6);
+    });
+});
+</script>
+{% endif %}
 {% endblock %}

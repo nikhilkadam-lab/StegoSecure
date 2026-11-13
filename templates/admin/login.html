@@ -106,6 +106,31 @@
             font-size: 12px;
             text-decoration: none;
         }
+
+        .otp-info {
+    text-align: center;
+    color: #aab8ce;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+.otp-email {
+    color: #00e5ff;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.back-button {
+    display: block;
+    width: auto;
+    margin: 15px auto 0;
+    padding: 8px;
+    background: transparent;
+    color: #00e5ff;
+    font-size: 12px;
+    font-weight: 500;
+}
     </style>
 </head>
 
@@ -125,9 +150,53 @@
         {% endfor %}
     {% endwith %}
 
+ {% if otp_sent %}
+
+    <p class="otp-info">
+        A verification code has been sent to
+        <br>
+        <span class="otp-email">{{ admin_email }}</span>
+    </p>
+
     <form method="POST">
 
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="verify_otp">
+
+        <label for="otp">Verification Code</label>
+        <input
+            type="text"
+            id="otp"
+            name="otp"
+            placeholder="Enter 6-digit OTP"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            autocomplete="one-time-code"
+            required
+        >
+
+        <button type="submit">Verify OTP</button>
+
+    </form>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="password">
+
+        <input type="hidden" name="email" value="{{ admin_email }}">
+
+        <button type="submit" class="back-button">
+            Start Login Again
+        </button>
+    </form>
+
+{% else %}
+
+    <form method="POST">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="password">
 
         <label for="email">Admin Email</label>
         <input
@@ -149,9 +218,11 @@
             required
         >
 
-        <button type="submit">Secure Login</button>
+        <button type="submit">Continue</button>
 
     </form>
+
+{% endif %}
 
     <a href="{{ url_for('home') }}" class="back">
         ← Back to Website

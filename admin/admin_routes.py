@@ -19,6 +19,11 @@ from argon2.exceptions import (
 )
 
 from db import get_db_connection
+from services.otp_service import (
+    issue_otp,
+    verify_otp,
+    consume_verified_otp,
+)
 from utils.validators import normalize_email
 from .admin_auth import admin_required, get_active_admin
 from .dashboard_service import get_dashboard_statistics
@@ -59,6 +64,7 @@ admin_bp = Blueprint(
 password_hasher = PasswordHasher()
 
 
+
 @admin_bp.route("/", methods=["GET", "POST"])
 def login():
 
@@ -79,71 +85,169 @@ def login():
 
     if request.method == "POST":
 
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "")
+        action = request.form.get("action", "password").strip()
 
-        connection = None
-        cursor = None
+        # STEP 1: Verify admin email and password, then send OTP.
+        if action == "password":
 
-        try:
-            email = normalize_email(email)
+            email = request.form.get("email", "").strip()
+            password = request.form.get("password", "")
 
-            if not password:
-                raise ValueError("Invalid credentials.")
-
-            connection = get_db_connection()
-            cursor = connection.cursor(dictionary=True)
-
-            cursor.execute(
-                """
-                SELECT id, username, email, password_hash, is_active
-                FROM admins
-                WHERE email = %s
-                LIMIT 1
-                """,
-                (email,),
-            )
-
-            admin = cursor.fetchone()
-
-            if not admin or not admin["is_active"]:
-                raise ValueError("Invalid credentials.")
+            connection = None
+            cursor = None
 
             try:
-                password_hasher.verify(
-                    admin["password_hash"],
-                    password,
+                email = normalize_email(email)
+
+                if not password:
+                    raise ValueError("Invalid credentials.")
+
+                connection = get_db_connection()
+                cursor = connection.cursor(dictionary=True)
+
+                cursor.execute(
+                    """
+                    SELECT id, username, email, password_hash, is_active
+                    FROM admins
+                    WHERE email = %s
+                    LIMIT 1
+                    """,
+                    (email,),
                 )
 
-            except (
-                VerifyMismatchError,
-                VerificationError,
-                InvalidHashError,
-            ):
-                raise ValueError("Invalid credentials.")
+                admin = cursor.fetchone()
 
-            # Set admin session without clearing the user session.
-            session["admin_id"] = admin["id"]
-            session["admin_username"] = admin["username"]
-            session["admin_email"] = admin["email"]
+                if not admin or not admin["is_active"]:
+                    raise ValueError("Invalid credentials.")
 
-            return redirect(url_for("admin.dashboard"))
+                try:
+                    password_hasher.verify(
+                        admin["password_hash"],
+                        password,
+                    )
 
-        except ValueError:
-            flash("Invalid email or password.", "error")
+                except (
+                    VerifyMismatchError,
+                    VerificationError,
+                    InvalidHashError,
+                ):
+                    raise ValueError("Invalid credentials.")
 
-        except Exception:
-            current_app.logger.exception("Admin login failed")
-            flash("Unable to log in. Please try again.", "error")
+                # Remove previous authenticated and pending admin state.
+                session.pop("admin_id", None)
+                session.pop("admin_username", None)
+                session.pop("admin_email", None)
 
-        finally:
-            if cursor:
-                cursor.close()
+                session.pop("admin_pending_id", None)
+                session.pop("admin_pending_email", None)
+                session.pop("admin_otp_challenge_id", None)
 
-            if connection and connection.is_connected():
-                connection.close()
+                # Send OTP only after successful password verification.
+                result = issue_otp(
+                    email=admin["email"],
+                    purpose="admin_login",
+                )
 
-    return render_template("admin/login.html")
+                # Store pending identity, NOT authenticated admin access.
+                session["admin_pending_id"] = admin["id"]
+                session["admin_pending_email"] = admin["email"]
+                session["admin_otp_challenge_id"] = result["challenge_id"]
+
+                flash(
+                    "Verification code sent to your registered admin email.",
+                    "success",
+                )
+
+            except ValueError as exc:
+                flash(str(exc), "error")
+
+            except Exception:
+                current_app.logger.exception("Admin login failed")
+                flash("Unable to log in. Please try again.", "error")
+
+            finally:
+                if cursor:
+                    cursor.close()
+
+                if connection and connection.is_connected():
+                    connection.close()
+
+        # STEP 2: Verify OTP and only then create the admin session.
+        elif action == "verify_otp":
+
+            email = session.get("admin_pending_email")
+            admin_id = session.get("admin_pending_id")
+            expected_challenge_id = session.get("admin_otp_challenge_id")
+
+            if not email or not admin_id or not expected_challenge_id:
+                flash(
+                    "Please enter your admin email and password again.",
+                    "error",
+                )
+                return redirect(url_for("admin.login"))
+
+            try:
+                result = verify_otp(
+                    email=email,
+                    purpose="admin_login",
+                    submitted_otp=request.form.get("otp", "").strip(),
+                )
+
+                if str(result["challenge_id"]) != str(expected_challenge_id):
+                    raise ValueError(
+                        "This verification code is no longer valid. "
+                        "Please log in again."
+                    )
+
+                # Recheck that the admin account is still active.
+                admin = get_active_admin(admin_id)
+
+                if not admin:
+                    session.pop("admin_pending_id", None)
+                    session.pop("admin_pending_email", None)
+                    session.pop("admin_otp_challenge_id", None)
+
+                    raise ValueError(
+                        "Your admin account is inactive or unavailable."
+                    )
+
+                # Consume the verified OTP so it cannot be reused.
+                if not consume_verified_otp(expected_challenge_id):
+                    raise ValueError(
+                        "Your verification code has expired. Please log in again."
+                    )
+
+                # OTP verified: create the authenticated admin session.
+                session.pop("admin_pending_id", None)
+                session.pop("admin_pending_email", None)
+                session.pop("admin_otp_challenge_id", None)
+
+                session["admin_id"] = admin["id"]
+                session["admin_username"] = admin["username"]
+                session["admin_email"] = admin["email"]
+
+                flash("Admin login verified successfully.", "success")
+
+                return redirect(url_for("admin.dashboard"))
+
+            except ValueError as exc:
+                flash(str(exc), "error")
+
+            except Exception:
+                current_app.logger.exception("Admin OTP verification failed")
+                flash(
+                    "Unable to verify the code. Please try again.",
+                    "error",
+                )
+
+        else:
+            flash("Invalid login action.", "error")
+
+    return render_template(
+        "admin/login.html",
+        otp_sent=bool(session.get("admin_otp_challenge_id")),
+        admin_email=session.get("admin_pending_email", ""),
+    )
 
 
 @admin_bp.route("/dashboard")
